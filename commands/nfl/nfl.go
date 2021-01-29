@@ -107,7 +107,7 @@ func getTeamName(team string) string {
 		return "Giants"
 	case "PHI":
 		return "Eagles"
-	case "LAR":
+	case "LA", "LAR":
 		return "Rams"
 	case "SF":
 		return "49ers"
@@ -116,7 +116,7 @@ func getTeamName(team string) string {
 	case "TB":
 		return "Buccaneers"
 	case "WAS":
-		return "Redskins"
+		return "Football Team"
 	case "BAL":
 		return "Ravens"
 	case "BUF":
@@ -141,7 +141,7 @@ func getTeamName(team string) string {
 		return "Patriots"
 	case "NYJ":
 		return "Jets"
-	case "OAK":
+	case "LV", "LVR", "OAK":
 		return "Raiders"
 	case "PIT":
 		return "Steelers"
