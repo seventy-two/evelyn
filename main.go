@@ -133,7 +133,7 @@ func main() {
 		movieAPI: &service.Service{
 			TargetURL: *app.String(cli.StringOpt{
 				Name:   "MovieURL",
-				Value:  "http://www.omdbapi.com/?t=%s&y=&plot=short&r=json&tomatoes=true&apikey=%s",
+				Value:  "http://www.omdbapi.com/?t=%s&plot=short&apikey=%s",
 				EnvVar: "MOVIE_URL",
 			}),
 			APIKey: *app.String(cli.StringOpt{
@@ -183,6 +183,21 @@ func main() {
 				Name:   "StocksLookupURL",
 				Value:  "http://autoc.finance.yahoo.com/autoc?query=%s&region=EU&lang=en-GB",
 				EnvVar: "STOCKS_LOOKUP_URL",
+			}),
+			CryptoURL: *app.String(cli.StringOpt{
+				Name:   "StocksCryptoURL",
+				Value:  "https://cloud-sse.iexapis.com/stable/crypto/%s/quote?token=%s",
+				EnvVar: "STOCKS_CRYPTO_URL",
+			}),
+			CurrencyURL: *app.String(cli.StringOpt{
+				Name:   "StocksCurrencyURL",
+				Value:  "https://cloud-sse.iexapis.com/stable/fx/latest?symbols=%s&token=%s",
+				EnvVar: "STOCKS_CURRENCY_URL",
+			}),
+			CurrencyRatesURL: *app.String(cli.StringOpt{
+				Name:   "StocksCurrencyRatesURL",
+				Value:  "https://api.exchangeratesapi.io/latest?base=GBP",
+				EnvVar: "STOCKS_CURRENCY_RATES_URL",
 			}),
 		},
 		siegeAPI: &siege.Service{

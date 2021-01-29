@@ -61,6 +61,7 @@ func getCoords(location string) string {
 }
 
 func weather(location string) (msg string, err error) {
+	location = strings.Title(location)
 	coords := getCoords(location)
 	if coords == "" {
 		return fmt.Sprintf("Could not find %s", location), nil
@@ -123,7 +124,7 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		} else {
-			location = strings.Title(strings.Join(matches[1:], " "))
+			location = strings.Join(matches[1:], " ")
 		}
 		str, err := weather(location)
 		if err != nil {
@@ -145,7 +146,7 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		} else {
-			location = strings.Title(strings.Join(matches[1:], " "))
+			location = strings.Join(matches[1:], " ")
 		}
 		str, err := forecast(location)
 		if err != nil {

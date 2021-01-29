@@ -2,6 +2,7 @@ package weather
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ryanuber/columnize"
@@ -9,6 +10,7 @@ import (
 )
 
 func forecast(location string) (msg string, err error) {
+	location = strings.Title(location)
 	coords := getCoords(location)
 	if coords == "" {
 		return fmt.Sprintf("Could not find %s", location), nil
