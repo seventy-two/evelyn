@@ -2,7 +2,6 @@ package movie
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -12,18 +11,61 @@ import (
 
 var serviceConfig *service.Service
 
-func omdb(matches []string) (msg string, err error) {
+func omdb(matches []string, s *discordgo.Session, channelID string) error {
 	data := &movie{}
 	toQuery := strings.Join(matches, "+")
-	err = web.GetJSON(fmt.Sprintf(serviceConfig.TargetURL, url.QueryEscape(toQuery), serviceConfig.APIKey), data)
+	err := web.GetJSON(fmt.Sprintf(serviceConfig.TargetURL, toQuery, serviceConfig.APIKey), data)
 
 	if err != nil {
-		return fmt.Sprintf("There was a problem with your request."), nil
+		return fmt.Errorf("There was a problem with your request: %w", err)
 	}
 	if data.Title == "" {
-		return fmt.Sprintf("Not found."), nil
+		return fmt.Errorf("not found")
 	}
-	return fmt.Sprintf("%s (%s)\n%s iMDb: %s\n%s\n%s", data.Title, data.Year, data.Genre, data.ImdbRating, data.Plot, data.Actors), nil
+
+	out := ""
+	for _, r := range data.Ratings {
+		out = fmt.Sprintf("%s\n%s", out, fmt.Sprintf("%s: %s", r.Source, r.Value))
+	}
+
+	out = strings.Replace(out, "Internet Movie Database", "IMDb", -1)
+	out = strings.Replace(out, "Rotten Tomatoes", "RT", -1)
+
+	embed := &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("%s (%s)", data.Title, data.Year),
+		Description: data.Plot,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "Genre",
+				Value: data.Genre,
+			},
+			{
+				Name:  "Director",
+				Value: data.Director,
+			},
+			{
+				Name:  "Actors",
+				Value: data.Actors,
+			},
+		},
+	}
+
+	if out != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "Ratings",
+			Value: out,
+		})
+	}
+
+	if data.Poster != "N/A" {
+		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
+			URL: data.Poster,
+		}
+	}
+
+	_, err = s.ChannelMessageSendEmbed(channelID, embed)
+
+	return err
 }
 
 func RegisterService(dg *discordgo.Session, config *service.Service) {
@@ -39,14 +81,8 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	switch matches[0] {
 	case "!m":
-		str, err := omdb(matches[1:])
-		if err != nil {
-			str = fmt.Sprintf("an error occured (%s)", err)
-		}
-
-		if str != "" {
-			fmtstr := fmt.Sprintf("```%s```", str)
-			s.ChannelMessageSend(m.ChannelID, fmtstr)
+		if err := omdb(matches[1:], s, m.ChannelID); err != nil {
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 		}
 	}
 }
