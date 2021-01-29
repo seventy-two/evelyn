@@ -25,21 +25,24 @@ import (
 	"github.com/seventy-two/evelyn/commands/tv"
 	"github.com/seventy-two/evelyn/commands/urbandictionary"
 	"github.com/seventy-two/evelyn/commands/weather"
+	"github.com/seventy-two/evelyn/passive/upsetter"
 )
 
-func ready(s *discordgo.Session, event *discordgo.Ready) {
+func startedUp(s *discordgo.Session, event *discordgo.Ready) {
 	s.UpdateStatus(0, "Listening to prefix !")
 }
 
 func start(app *cli.Cli, services *serviceConfig, dbPath string) {
 	dg, _ := discordgo.New(fmt.Sprintf("Bot %s", services.discordAPI.APIKey))
-
+	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	go registerServices(dg, services, dbPath)
-	dg.AddHandler(ready)
+	dg.AddHandler(startedUp)
 	err := dg.Open()
 	if err != nil {
 		log.Fatalf("Error opening Discord session: %s", err)
 	}
+
+	dg.AddHandler(logger)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
@@ -93,6 +96,7 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 
 	shitpost.RegisterService(dg)
 
+	go upsetter.Upset(dg)
 }
 
 func logger(s *discordgo.Session, m *discordgo.MessageCreate) {

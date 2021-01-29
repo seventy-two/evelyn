@@ -39,6 +39,27 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if hasWord(m.Content, "linux") && !strings.Contains(strings.ToLower(m.Content), "gnu") {
 		s.ChannelMessageSend(m.ChannelID, rms())
 	}
+
+	// if m.Author.ID == "261097001301704704" && (strings.Contains(m.Content, "http://") || strings.Contains(m.Content, "https://") ||
+	// 	(strings.Contains(m.Content, "://") || strings.Contains(m.Content, "www")) ||
+	// 	strings.Contains(m.Content, "watch?")) {
+
+	// 	err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
+	// 	// dm, err := s.UserChannelCreate(m.Author.ID)
+	// 	// if err != nil {
+	// 	// 	fmt.Println(err)
+	// 	// 	return
+	// 	// }
+	// 	s.ChannelMessageSend("686275064831934483", m.Content)
+	// }
+
+	if strings.HasPrefix(m.Content, "!upset") {
+		go upset(s, m)
+	}
 }
 
 func hasWord(s, match string) bool {
