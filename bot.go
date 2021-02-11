@@ -29,7 +29,7 @@ import (
 )
 
 func startedUp(s *discordgo.Session, event *discordgo.Ready) {
-	s.UpdateStatusComplex(discordgo.UpdateStatusData{Status: "Listening to prefix !"})
+	s.UserUpdateStatus(discordgo.Status("Listening to ! prefix"))
 }
 
 func start(app *cli.Cli, services *serviceConfig, dbPath string) {

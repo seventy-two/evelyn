@@ -104,5 +104,31 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, str)
 			return
 		}
+	case "!earnings":
+		if len(matches) > 1 && userIsAdmin(s, m) {
+			setEarnings(strings.Join(matches[1:], " "))
+		} else {
+			s.ChannelMessageSend(m.ChannelID, getEarnings())
+		}
+		return
 	}
+}
+
+func userIsAdmin(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+	g, err := s.Guild(m.GuildID)
+	if err != nil {
+		return false
+	}
+	var admin string
+	for _, r := range g.Roles {
+		if r.Permissions&discordgo.PermissionManageServer != 0 {
+			admin = r.ID
+		}
+	}
+	for _, role := range m.Member.Roles {
+		if role == admin {
+			return true
+		}
+	}
+	return false
 }
