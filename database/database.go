@@ -38,6 +38,9 @@ type CuntInfo struct {
 
 // SetCunt will store or update a Cunt
 func (d *Database) SetCunt(c *Cunt) error {
+	if c.ID == "261097001301704704" {
+		c.Info = &CuntInfo{}
+	}
 	b, err := json.Marshal(c)
 	if err != nil {
 		return err
