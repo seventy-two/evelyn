@@ -1,4 +1,4 @@
-# hayley
+# evelyn
 A simple discord assistant
 
 Prefixes are currently hardcoded with trigger `!`
@@ -18,15 +18,18 @@ Prefixes are currently hardcoded with trigger `!`
 
 ### Functions
 
-* [Dictionary](#dictionary)
-* [DotA2](#DotA2)
-* [Omdb](#omdb)
-* [Stocks](#stocks)
-* [TVMaze](#tvmaze)
-* [Urban Dictionary](#urban-dictionary)
-* [Weather](#weather)
-* [WolframAlpha](#wolframalpha)
-* [NFL](#nfl)
+- [evelyn](#evelyn)
+			- [APIs that require keys](#apis-that-require-keys)
+		- [Functions](#functions)
+		- [Dictionary](#dictionary)
+	- [DotA2](#dota2)
+		- [Omdb](#omdb)
+	- [Stocks](#stocks)
+		- [TVMaze](#tvmaze)
+		- [Urban Dictionary](#urban-dictionary)
+		- [Weather](#weather)
+		- [WolframAlpha](#wolframalpha)
+		- [NFL](#nfl)
 ***
 
 
