@@ -36,3 +36,8 @@ type wotdResponse struct {
 		Source       string `json:"source"`
 	} `json:"definitions"`
 }
+
+type RelatedWords struct {
+	RelationshipType string   `json:"relationshipType"`
+	Words            []string `json:"words"`
+}

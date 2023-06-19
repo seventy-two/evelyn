@@ -10,7 +10,6 @@ import (
 	"github.com/seventy-two/evelyn/database"
 
 	"github.com/seventy-two/evelyn/commands/beer"
-	"github.com/seventy-two/evelyn/commands/shitpost"
 
 	"github.com/bwmarrin/discordgo"
 	cli "github.com/jawher/mow.cli"
@@ -25,7 +24,6 @@ import (
 	"github.com/seventy-two/evelyn/commands/tv"
 	"github.com/seventy-two/evelyn/commands/urbandictionary"
 	"github.com/seventy-two/evelyn/commands/weather"
-	"github.com/seventy-two/evelyn/passive/upsetter"
 )
 
 func startedUp(s *discordgo.Session, event *discordgo.Ready) {
@@ -94,9 +92,6 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 		quotes.RegisterService(dg, services.quotesAPI)
 	}
 
-	shitpost.RegisterService(dg)
-
-	go upsetter.Upset(dg)
 }
 
 func logger(s *discordgo.Session, m *discordgo.MessageCreate) {

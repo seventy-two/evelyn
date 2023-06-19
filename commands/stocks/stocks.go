@@ -13,6 +13,7 @@ type Service struct {
 	CurrencyURL      string
 	CurrencyRatesURL string
 	LookupURL        string
+	ChartURL         string
 	APIKey           string
 	Storage          *WatchlistStorage
 }
@@ -20,17 +21,19 @@ type Service struct {
 var serviceConfig *Service
 
 type stock struct {
-	symbol        string
-	name          string
-	latestPrice   float64
-	latestSource  string
-	latestTime    string
-	change        float64
-	changePercent float64
-	week52high    float64
-	week52low     float64
-	ytdChange     float64
-	peRatio       float64
+	symbol                string
+	name                  string
+	latestPrice           float64
+	latestSource          string
+	latestTime            string
+	change                float64
+	changePercent         float64
+	week52high            float64
+	week52low             float64
+	ytdChange             float64
+	peRatio               float64
+	extendedPrice         float64
+	extendedChangePercent float64
 }
 
 func RegisterService(dg *discordgo.Session, config *Service) {
@@ -44,10 +47,14 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	matches := strings.Split(m.Content, " ")
 
+	if m.ChannelID != "819577977998147604" && m.ChannelID != "848603390408654878" {
+		return
+	}
+
 	switch matches[0] {
 	case "!quote":
 		var str string
-		q, err := getStock(strings.Join(matches[1:], "+"))
+		q, err := lookupAndGetStock(strings.Join(matches[1:], "+"))
 		if err != nil {
 			str = fmt.Sprintf("an error occured (%s)", err)
 			s.ChannelMessageSend(m.ChannelID, str)
@@ -73,7 +80,6 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var c = []string{
 			"btcusd",
 			"ethusd",
-			"ltcusd",
 		}
 
 		var out []string
@@ -105,30 +111,19 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 	case "!earnings":
-		if len(matches) > 1 && userIsAdmin(s, m) {
+		if len(matches) > 1 && userIsGN(s, m) {
 			setEarnings(strings.Join(matches[1:], " "))
 		} else {
 			s.ChannelMessageSend(m.ChannelID, getEarnings())
 		}
 		return
+	case "!chart":
+		if len(matches) > 1 {
+			makeChart(s, m, matches[1])
+		}
 	}
 }
 
-func userIsAdmin(s *discordgo.Session, m *discordgo.MessageCreate) bool {
-	g, err := s.Guild(m.GuildID)
-	if err != nil {
-		return false
-	}
-	var admin string
-	for _, r := range g.Roles {
-		if r.Permissions&discordgo.PermissionManageServer != 0 {
-			admin = r.ID
-		}
-	}
-	for _, role := range m.Member.Roles {
-		if role == admin {
-			return true
-		}
-	}
-	return false
+func userIsGN(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+	return true
 }

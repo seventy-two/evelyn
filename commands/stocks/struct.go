@@ -121,3 +121,17 @@ type CurrencyRates struct {
 	Base string `json:"base"`
 	Date string `json:"date"`
 }
+
+type ChartData []struct {
+	Date           string  `json:"date"`
+	Minute         string  `json:"minute"`
+	Label          string  `json:"label"`
+	High           float64 `json:"high"`
+	Low            float64 `json:"low"`
+	Open           float64 `json:"open"`
+	Close          float64 `json:"close"`
+	Average        float64 `json:"average"`
+	Volume         int     `json:"volume"`
+	Notional       float64 `json:"notional"`
+	NumberOfTrades int     `json:"numberOfTrades"`
+}

@@ -11,9 +11,10 @@ import (
 
 // Service is configuration for the Dictionary service
 type Service struct {
-	WordnikURL    string
-	WOTDURL       string
-	WordnikAPIKey string
+	WordnikSearchURL       string
+	WordnikRelationshipURL string
+	WOTDURL                string
+	WordnikAPIKey          string
 }
 
 var serviceConfig *Service
@@ -23,7 +24,7 @@ func dict(matches []string) (msg string, err error) {
 	var data []Wordnik
 	var result []string
 
-	err = web.GetJSON(fmt.Sprintf(serviceConfig.WordnikURL, text, serviceConfig.WordnikAPIKey), &data)
+	err = web.GetJSON(fmt.Sprintf(serviceConfig.WordnikSearchURL, text, serviceConfig.WordnikAPIKey), &data)
 	if err != nil {
 		return fmt.Sprintf("There was a problem with your request."), err
 	}
@@ -39,6 +40,32 @@ func dict(matches []string) (msg string, err error) {
 		out += res
 		out += "\n"
 	}
+
+	return out, nil
+}
+
+func synonym(matches []string) (msg string, err error) {
+	text := url.QueryEscape(strings.Join(matches, "+"))
+	var data []RelatedWords
+	var result []string
+
+	err = web.GetJSON(fmt.Sprintf(serviceConfig.WordnikRelationshipURL, text, serviceConfig.WordnikAPIKey), &data)
+	if err != nil {
+		if strings.Contains(err.Error(), "Not found") {
+			return fmt.Sprintf("not found"), nil
+		}
+		return fmt.Sprintf("There was a problem with your request."), err
+	}
+	if len(data) == 0 {
+		return fmt.Sprintf("Word/phrase not found."), nil
+	}
+	for _, word := range data {
+		for _, related := range word.Words {
+			result = append(result, related)
+		}
+	}
+
+	out := strings.Join(result, ", ")
 
 	return out, nil
 }
@@ -68,6 +95,8 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch matches[0] {
 	case "!dict":
 		str, err = dict(matches[1:])
+	case "!syn":
+		str, err = synonym(matches[1:])
 	case "!wotd":
 		str, err = wotd()
 	}

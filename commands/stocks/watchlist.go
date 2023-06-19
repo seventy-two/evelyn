@@ -46,7 +46,7 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 	}
 	matches := strings.Split(m.Content, " ")
 	if len(matches) > 1 && matches[1] == "add" {
-		stock, err := getStock(strings.Join(matches[2:], "+"))
+		stock, err := lookupAndGetStock(strings.Join(matches[2:], "+"))
 		if stock == nil || err != nil {
 			s.ChannelMessageSend(m.ChannelID, "Could not add stock to watchlist as stock could not be found")
 			return
@@ -64,6 +64,7 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 		}
 		return
 	}
+	s.ChannelTyping(m.ChannelID)
 
 	queries, err := w.retrieveWatchlistForUser(m.Author.ID)
 	if err != nil {
@@ -78,7 +79,14 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
-		stocks = append(stocks, stock)
+		if stock != nil {
+			stocks = append(stocks, stock)
+		}
+	}
+
+	if len(stocks) > 20 {
+		s.ChannelMessageSend(m.ChannelID, "your watchlist is too large, consider deleting some entries :)")
+		return
 	}
 
 	output := createWatchlistOutput(stocks)

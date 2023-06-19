@@ -112,7 +112,6 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	matches := strings.Split(m.Content, " ")
-
 	switch matches[0] {
 	case "!w":
 		var location string
@@ -128,7 +127,8 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		str, err := weather(location)
 		if err != nil {
-			str = fmt.Sprintf("an error occured (%s)", err)
+			fmt.Println(fmt.Sprintf("an error occured (%s)", err.Error()))
+			return
 		}
 
 		if str != "" {
@@ -150,7 +150,8 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		str, err := forecast(location)
 		if err != nil {
-			str = fmt.Sprintf("an error occured (%s)", err)
+			fmt.Printf("an error occured (%s)", err.Error())
+			return
 		}
 
 		if str != "" {

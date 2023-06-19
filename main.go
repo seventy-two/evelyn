@@ -104,7 +104,7 @@ func main() {
 			}),
 			DarkSkyURL: *app.String(cli.StringOpt{
 				Name:   "WeatherURL",
-				Value:  "https://api.forecast.io/forecast/%s/%s?units=auto&exclude=minutely,hourly,alerts",
+				Value:  "https://api.pirateweather.net/forecast/%s/%s?units=uk&exclude=minutely,hourly,alerts",
 				EnvVar: "WEATHER_URL",
 			}),
 			DarkSkyAPIKey: *app.String(cli.StringOpt{
@@ -114,10 +114,15 @@ func main() {
 			}),
 		},
 		dictionaryAPI: &dictionary.Service{
-			WordnikURL: *app.String(cli.StringOpt{
-				Name:   "WordnikURL",
+			WordnikSearchURL: *app.String(cli.StringOpt{
+				Name:   "WordnikSearchURL",
 				Value:  "http://api.wordnik.com/v4/word.json/%s/definitions?limit=3&includeRelated=true&sourceDictionaries=all&useCanonical=true&includeTags=false&api_key=%s",
-				EnvVar: "WORDNIK_URL",
+				EnvVar: "WORDNIK_SEARCH_URL",
+			}),
+			WordnikRelationshipURL: *app.String(cli.StringOpt{
+				Name:   "WordnikRelationshipURL",
+				Value:  "https://api.wordnik.com/v4/word.json/%s/relatedWords?useCanonical=false&relationshipTypes=equivalent&limitPerRelationshipType=500&api_key=%s",
+				EnvVar: "WORDNIK_RELATIONSHIP_URL",
 			}),
 			WOTDURL: *app.String(cli.StringOpt{
 				Name:   "WOTDURL",
@@ -140,6 +145,13 @@ func main() {
 				Name:   "MovieAPIKey",
 				Value:  "",
 				EnvVar: "MOVIE_API_KEY",
+			}),
+		},
+		divegrassAPI: &service.Service{
+			TargetURL: *app.String(cli.StringOpt{
+				Name:   "divegrassURL",
+				Value:  "https://api.fifa.com/api/v1/live/football/",
+				EnvVar: "DIVEGRASS_URL",
 			}),
 		},
 		mathAPI: &service.Service{
@@ -171,7 +183,7 @@ func main() {
 		stocksAPI: &stocks.Service{
 			QuoteURL: *app.String(cli.StringOpt{
 				Name:   "StocksQuoteURL",
-				Value:  "https://cloud-sse.iexapis.com/stable/stock/%s/quote?token=%s",
+				Value:  "https://cloud.iexapis.com/stable/stock/%s/quote?token=%s",
 				EnvVar: "STOCKS_QUOTE_URL",
 			}),
 			APIKey: *app.String(cli.StringOpt{
@@ -186,18 +198,23 @@ func main() {
 			}),
 			CryptoURL: *app.String(cli.StringOpt{
 				Name:   "StocksCryptoURL",
-				Value:  "https://cloud-sse.iexapis.com/stable/crypto/%s/quote?token=%s",
+				Value:  "https://cloud.iexapis.com/stable/crypto/%s/quote?token=%s",
 				EnvVar: "STOCKS_CRYPTO_URL",
 			}),
 			CurrencyURL: *app.String(cli.StringOpt{
 				Name:   "StocksCurrencyURL",
-				Value:  "https://cloud-sse.iexapis.com/stable/fx/latest?symbols=%s&token=%s",
+				Value:  "https://cloud.iexapis.com/stable/fx/latest?symbols=%s&token=%s",
 				EnvVar: "STOCKS_CURRENCY_URL",
 			}),
 			CurrencyRatesURL: *app.String(cli.StringOpt{
 				Name:   "StocksCurrencyRatesURL",
 				Value:  "https://api.exchangeratesapi.io/latest?base=GBP",
 				EnvVar: "STOCKS_CURRENCY_RATES_URL",
+			}),
+			ChartURL: *app.String(cli.StringOpt{
+				Name:   "ChartURL",
+				Value:  "https://cloud.iexapis.com/stable/stock/%s/intraday-prices?token=%s",
+				EnvVar: "CHART_URL",
 			}),
 		},
 		siegeAPI: &siege.Service{

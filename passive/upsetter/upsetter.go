@@ -24,7 +24,7 @@ func Upset(s *discordgo.Session) {
 						break
 					}
 					if p.Status != discordgo.StatusInvisible && p.Status != discordgo.StatusOffline {
-						s.ChannelMessageSend(s.State.Guilds[i].Channels[0].ID, fmt.Sprintf("<@%s> has been chosen", members[r].User.ID))
+						s.ChannelMessageSend(s.State.Guilds[i].Channels[0].ID, fmt.Sprintf("<@%s> has been chosen. Please bully them accordingly.", members[r].User.ID))
 						break
 					}
 				}
