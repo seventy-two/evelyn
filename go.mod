@@ -3,8 +3,6 @@ module github.com/seventy-two/evelyn
 go 1.15
 
 require (
-	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
-	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/bwmarrin/discordgo v0.23.2
 	github.com/dgraph-io/badger/v2 v2.2007.2
