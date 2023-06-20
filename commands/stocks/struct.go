@@ -1,137 +1,144 @@
 package stocks
 
-type IEXStocks struct {
-	Symbol                string  `json:"symbol"`
-	CompanyName           string  `json:"companyName"`
-	CalculationPrice      string  `json:"calculationPrice"`
-	Open                  float64 `json:"open"`
-	OpenTime              int64   `json:"openTime"`
-	Close                 float64 `json:"close"`
-	CloseTime             int64   `json:"closeTime"`
-	High                  float64 `json:"high"`
-	Low                   float64 `json:"low"`
-	LatestPrice           float64 `json:"latestPrice"`
-	LatestSource          string  `json:"latestSource"`
-	LatestTime            string  `json:"latestTime"`
-	LatestUpdate          int64   `json:"latestUpdate"`
-	LatestVolume          int     `json:"latestVolume"`
-	IexRealtimePrice      float64 `json:"iexRealtimePrice"`
-	IexRealtimeSize       int     `json:"iexRealtimeSize"`
-	IexLastUpdated        int64   `json:"iexLastUpdated"`
-	DelayedPrice          float64 `json:"delayedPrice"`
-	DelayedPriceTime      int64   `json:"delayedPriceTime"`
-	ExtendedPrice         float64 `json:"extendedPrice"`
-	ExtendedChange        float64 `json:"extendedChange"`
-	ExtendedChangePercent float64 `json:"extendedChangePercent"`
-	ExtendedPriceTime     int64   `json:"extendedPriceTime"`
-	PreviousClose         float64 `json:"previousClose"`
-	Change                float64 `json:"change"`
-	ChangePercent         float64 `json:"changePercent"`
-	IexMarketPercent      float64 `json:"iexMarketPercent"`
-	IexVolume             int     `json:"iexVolume"`
-	AvgTotalVolume        int     `json:"avgTotalVolume"`
-	IexBidPrice           float64 `json:"iexBidPrice"`
-	IexBidSize            int     `json:"iexBidSize"`
-	IexAskPrice           float64 `json:"iexAskPrice"`
-	IexAskSize            int     `json:"iexAskSize"`
-	MarketCap             int64   `json:"marketCap"`
-	PeRatio               float64 `json:"peRatio"`
-	Week52High            float64 `json:"week52High"`
-	Week52Low             float64 `json:"week52Low"`
-	YtdChange             float64 `json:"ytdChange"`
+import "time"
+
+type Quote struct {
+	GlobalQuote struct {
+		Symbol           string `json:"01. symbol"`
+		Open             string `json:"02. open"`
+		High             string `json:"03. high"`
+		Low              string `json:"04. low"`
+		Price            string `json:"05. price"`
+		Volume           string `json:"06. volume"`
+		LatestTradingDay string `json:"07. latest trading day"`
+		PreviousClose    string `json:"08. previous close"`
+		Change           string `json:"09. change"`
+		ChangePercent    string `json:"10. change percent"`
+	} `json:"Global Quote"`
 }
 
 type Lookup struct {
-	ResultSet struct {
-		Query  string `json:"Query"`
-		Result []struct {
-			Symbol   string `json:"symbol"`
-			Name     string `json:"name"`
-			Exch     string `json:"exch"`
-			Type     string `json:"type"`
-			ExchDisp string `json:"exchDisp"`
-			TypeDisp string `json:"typeDisp"`
-		} `json:"Result"`
-	} `json:"ResultSet"`
+	BestMatches []struct {
+		Symbol      string `json:"1. symbol"`
+		Name        string `json:"2. name"`
+		Type        string `json:"3. type"`
+		Region      string `json:"4. region"`
+		MarketOpen  string `json:"5. marketOpen"`
+		MarketClose string `json:"6. marketClose"`
+		Timezone    string `json:"7. timezone"`
+		Currency    string `json:"8. currency"`
+		MatchScore  string `json:"9. matchScore"`
+	} `json:"bestMatches"`
 }
 
-type Crypto struct {
-	Symbol           string `json:"symbol"`
-	PrimaryExchange  string `json:"primaryExchange"`
-	Sector           string `json:"sector"`
-	CalculationPrice string `json:"calculationPrice"`
-	LatestPrice      string `json:"latestPrice"`
-	LatestSource     string `json:"latestSource"`
-	LatestUpdate     int64  `json:"latestUpdate"`
-	LatestVolume     string `json:"latestVolume"`
-	BidPrice         string `json:"bidPrice"`
-	BidSize          string `json:"bidSize"`
-	AskPrice         string `json:"askPrice"`
-	AskSize          string `json:"askSize"`
-	High             string `json:"high"`
-	Low              string `json:"low"`
-	PreviousClose    string `json:"previousClose"`
+type Earnings struct {
+	Symbol           string
+	Name             string
+	ReportDate       time.Time
+	FiscalDateEnding time.Time
+	Estimate         float32
+	Currency         string
 }
 
-type Currency struct {
-	Results []struct {
-		Symbol    string  `json:"symbol"`
-		Rate      float64 `json:"rate"`
-		Timestamp int64   `json:"timestamp"`
-		IsDerived bool    `json:"isDerived"`
-	}
+type ExchangeRate struct {
+	RealtimeCurrencyExchangeRate struct {
+		FromCurrencyCode string `json:"1. From_Currency Code"`
+		FromCurrencyName string `json:"2. From_Currency Name"`
+		ToCurrencyCode   string `json:"3. To_Currency Code"`
+		ToCurrencyName   string `json:"4. To_Currency Name"`
+		ExchangeRate     string `json:"5. Exchange Rate"`
+		LastRefreshed    string `json:"6. Last Refreshed"`
+		TimeZone         string `json:"7. Time Zone"`
+		BidPrice         string `json:"8. Bid Price"`
+		AskPrice         string `json:"9. Ask Price"`
+	} `json:"Realtime Currency Exchange Rate"`
 }
 
-type CurrencyRates struct {
-	Rates struct {
-		CAD float64 `json:"CAD"`
-		HKD float64 `json:"HKD"`
-		ISK float64 `json:"ISK"`
-		PHP float64 `json:"PHP"`
-		DKK float64 `json:"DKK"`
-		HUF float64 `json:"HUF"`
-		CZK float64 `json:"CZK"`
-		GBP float64 `json:"GBP"`
-		RON float64 `json:"RON"`
-		SEK float64 `json:"SEK"`
-		IDR float64 `json:"IDR"`
-		INR float64 `json:"INR"`
-		BRL float64 `json:"BRL"`
-		RUB float64 `json:"RUB"`
-		HRK float64 `json:"HRK"`
-		JPY float64 `json:"JPY"`
-		THB float64 `json:"THB"`
-		CHF float64 `json:"CHF"`
-		EUR float64 `json:"EUR"`
-		MYR float64 `json:"MYR"`
-		BGN float64 `json:"BGN"`
-		TRY float64 `json:"TRY"`
-		CNY float64 `json:"CNY"`
-		NOK float64 `json:"NOK"`
-		NZD float64 `json:"NZD"`
-		ZAR float64 `json:"ZAR"`
-		USD float64 `json:"USD"`
-		MXN float64 `json:"MXN"`
-		SGD float64 `json:"SGD"`
-		AUD float64 `json:"AUD"`
-		ILS float64 `json:"ILS"`
-		KRW float64 `json:"KRW"`
-		PLN float64 `json:"PLN"`
-	} `json:"rates"`
-	Base string `json:"base"`
-	Date string `json:"date"`
-}
-
-type ChartData []struct {
-	Date           string  `json:"date"`
-	Minute         string  `json:"minute"`
-	Label          string  `json:"label"`
-	High           float64 `json:"high"`
-	Low            float64 `json:"low"`
-	Open           float64 `json:"open"`
-	Close          float64 `json:"close"`
-	Average        float64 `json:"average"`
-	Volume         int     `json:"volume"`
-	Notional       float64 `json:"notional"`
-	NumberOfTrades int     `json:"numberOfTrades"`
+type CNBCStock struct {
+	FormattedQuoteResult struct {
+		FormattedQuote []struct {
+			Symbol             string `json:"symbol"`
+			SymbolType         string `json:"symbolType"`
+			Code               int    `json:"code"`
+			Name               string `json:"name"`
+			ShortName          string `json:"shortName"`
+			OnAirName          string `json:"onAirName"`
+			AltName            string `json:"altName"`
+			Last               string `json:"last"`
+			LastTimedate       string `json:"last_timedate"`
+			LastTime           string `json:"last_time"`
+			Changetype         string `json:"changetype"`
+			Type               string `json:"type"`
+			SubType            string `json:"subType"`
+			Exchange           string `json:"exchange"`
+			Source             string `json:"source"`
+			Open               string `json:"open"`
+			High               string `json:"high"`
+			Low                string `json:"low"`
+			Change             string `json:"change"`
+			ChangePct          string `json:"change_pct"`
+			CurrencyCode       string `json:"currencyCode"`
+			Volume             string `json:"volume"`
+			VolumeAlt          string `json:"volume_alt"`
+			Provider           string `json:"provider"`
+			PreviousDayClosing string `json:"previous_day_closing"`
+			AltSymbol          string `json:"altSymbol"`
+			RealTime           string `json:"realTime"`
+			Curmktstatus       string `json:"curmktstatus"`
+			Pe                 string `json:"pe"`
+			MktcapView         string `json:"mktcapView"`
+			Dividend           string `json:"dividend"`
+			Dividendyield      string `json:"dividendyield"`
+			Beta               string `json:"beta"`
+			Tendayavgvol       string `json:"tendayavgvol"`
+			Pcttendayvol       string `json:"pcttendayvol"`
+			Yrhiprice          string `json:"yrhiprice"`
+			Yrhidate           string `json:"yrhidate"`
+			Yrloprice          string `json:"yrloprice"`
+			Yrlodate           string `json:"yrlodate"`
+			Eps                string `json:"eps"`
+			Sharesout          string `json:"sharesout"`
+			Revenuettm         string `json:"revenuettm"`
+			Fpe                string `json:"fpe"`
+			Feps               string `json:"feps"`
+			Psales             string `json:"psales"`
+			Fsales             string `json:"fsales"`
+			Fpsales            string `json:"fpsales"`
+			Streamable         string `json:"streamable"`
+			IssueID            string `json:"issue_id"`
+			IssuerID           string `json:"issuer_id"`
+			CountryCode        string `json:"countryCode"`
+			TimeZone           string `json:"timeZone"`
+			FeedSymbol         string `json:"feedSymbol"`
+			Portfolioindicator string `json:"portfolioindicator"`
+			Roettm             string `json:"ROETTM"`
+			Netprofttm         string `json:"NETPROFTTM"`
+			Grosmgnttm         string `json:"GROSMGNTTM"`
+			Ttmebitd           string `json:"TTMEBITD"`
+			Debteqtyq          string `json:"DEBTEQTYQ"`
+			ExtendedMktQuote   struct {
+				Type         string `json:"type"`
+				Source       string `json:"source"`
+				Last         string `json:"last"`
+				LastTimedate string `json:"last_timedate"`
+				LastTime     string `json:"last_time"`
+				Change       string `json:"change"`
+				ChangePct    string `json:"change_pct"`
+				Volume       string `json:"volume"`
+				VolumeAlt    string `json:"volume_alt"`
+				Changetype   string `json:"changetype"`
+			} `json:"ExtendedMktQuote"`
+			EventData struct {
+				NextEarningsDate      string `json:"next_earnings_date"`
+				NextEarningsDateToday string `json:"next_earnings_date_today"`
+				AnnounceTime          string `json:"announce_time"`
+				DivExDate             string `json:"div_ex_date"`
+				DivExDateToday        string `json:"div_ex_date_today"`
+				DivAmount             string `json:"div_amount"`
+				Yrhiind               string `json:"yrhiind"`
+				Yrloind               string `json:"yrloind"`
+				IsHalted              string `json:"is_halted"`
+			} `json:"EventData"`
+		} `json:"FormattedQuote"`
+	} `json:"FormattedQuoteResult"`
 }

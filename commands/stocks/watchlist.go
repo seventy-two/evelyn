@@ -3,6 +3,7 @@ package stocks
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -73,15 +74,11 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 	}
 
 	var stocks []*stock
-	for _, query := range queries {
-		stock, err := getStock(query)
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			return
-		}
-		if stock != nil {
-			stocks = append(stocks, stock)
-		}
+	query := strings.Join(queries, "|")
+	stocks, err = getStockData(query)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
 	if len(stocks) > 20 {
@@ -98,14 +95,12 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 func createWatchlistOutput(stocks []*stock) string {
 	var lines []string
 	sort.Slice(stocks, func(i, j int) bool {
-		return stocks[i].changePercent > stocks[j].changePercent
+		f, _ := strconv.ParseFloat(strings.Trim(stocks[i].percentChange, "%"), 32)
+		s, _ := strconv.ParseFloat(strings.Trim(stocks[j].percentChange, "%"), 32)
+		return f > s
 	})
 	for _, stock := range stocks {
-		plus := ""
-		if stock.change > 0 {
-			plus = "+"
-		}
-		outputLine := fmt.Sprintf("%s|%.2f|%s%.2f|(%s%.2f%s)", stock.symbol, stock.latestPrice, plus, stock.change, plus, stock.changePercent*100, "%")
+		outputLine := fmt.Sprintf("%s|%s|%s|(%s)", stock.symbol, stock.price, stock.change, stock.percentChange)
 		lines = append(lines, outputLine)
 	}
 	if len(lines) == 0 {

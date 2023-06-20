@@ -10,6 +10,8 @@ import (
 	"github.com/seventy-two/evelyn/database"
 
 	"github.com/seventy-two/evelyn/commands/beer"
+	"github.com/seventy-two/evelyn/commands/bing"
+	"github.com/seventy-two/evelyn/commands/stocks"
 
 	"github.com/bwmarrin/discordgo"
 	cli "github.com/jawher/mow.cli"
@@ -20,7 +22,6 @@ import (
 	"github.com/seventy-two/evelyn/commands/nfl"
 	"github.com/seventy-two/evelyn/commands/quotes"
 	"github.com/seventy-two/evelyn/commands/siege"
-	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/commands/tv"
 	"github.com/seventy-two/evelyn/commands/urbandictionary"
 	"github.com/seventy-two/evelyn/commands/weather"
@@ -90,6 +91,9 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	}
 	if services.quotesAPI != nil {
 		quotes.RegisterService(dg, services.quotesAPI)
+	}
+	if services.bingAPI != nil {
+		bing.RegisterService(dg, services.bingAPI)
 	}
 
 }

@@ -2,10 +2,10 @@ package stocks
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/seventy-two/Cara/web"
+	"github.com/seventy-two/evelyn/commands/bing"
 )
 
 func lookupAndGetStock(query string) (*stock, error) {
@@ -14,132 +14,175 @@ func lookupAndGetStock(query string) (*stock, error) {
 		fmt.Println(err)
 		symbol = query
 	}
-	return getStock(symbol)
+	s, err := getStockData(symbol)
+	if err != nil {
+		return nil, err
+	}
+	if len(s) == 0 {
+		return nil, nil
+	}
+	return s[0], nil
+}
+
+func getStockData(symbol string) ([]*stock, error) {
+	url := fmt.Sprintf(serviceConfig.QuoteURL, symbol)
+	stocks := &CNBCStock{}
+	err := web.GetJSON(url, stocks)
+	if err != nil {
+		return nil, err
+	}
+	var stockz []*stock
+	for _, s := range stocks.FormattedQuoteResult.FormattedQuote {
+
+		price := s.Last
+		change := s.Change
+		percentChange := s.ChangePct
+		source := s.Source
+		time := s.LastTimedate
+		extPrice := ""
+		extChange := ""
+		extPct := ""
+
+		if s.ExtendedMktQuote.LastTime > s.LastTime {
+			extPrice = "\n🌙 " + s.ExtendedMktQuote.Last
+			extChange = "\n🌙 " + s.ExtendedMktQuote.Change
+			extPct = "(" + s.ExtendedMktQuote.ChangePct + ")"
+			source = s.ExtendedMktQuote.Source
+			time = s.ExtendedMktQuote.LastTimedate
+		}
+
+		stockz = append(stockz, &stock{
+			symbol:           s.Symbol,
+			name:             s.Name,
+			price:            price,
+			high:             s.High,
+			low:              s.Low,
+			change:           change,
+			percentChange:    percentChange,
+			extPrice:         extPrice,
+			extChange:        extChange,
+			extPercentChange: extPct,
+			source:           source,
+			eps:              s.Eps,
+			pe:               s.Pe,
+			mktcap:           s.MktcapView,
+			time:             time,
+			yearHigh:         s.Yrhiprice,
+			yearLow:          s.Yrloprice,
+		})
+	}
+	return stockz, nil
 }
 
 func lookupStock(query string) (string, error) {
 	lookup := &Lookup{}
-	err := web.GetJSON(fmt.Sprintf(serviceConfig.LookupURL, query), lookup)
+	err := web.GetJSON(fmt.Sprintf(serviceConfig.LookupURL, query, serviceConfig.APIKey), lookup)
 	if err != nil {
 		return "", err
 	}
-	if len(lookup.ResultSet.Result) == 0 {
+	if len(lookup.BestMatches) == 0 {
 		return "", nil
 	}
 	var symbol string
 
-	for _, res := range lookup.ResultSet.Result {
-		if !strings.Contains(res.Symbol, ".") {
-			symbol = res.Symbol
-			break
-		}
-	}
-
 	if symbol == "" {
-		symbol = strings.Split(lookup.ResultSet.Result[0].Symbol, ".")[0]
+		symbol = lookup.BestMatches[0].Symbol
 	}
 	return symbol, nil
 }
 
-func getStock(symbol string) (msg *stock, err error) {
-	data := &IEXStocks{}
-	url := fmt.Sprintf(serviceConfig.QuoteURL, symbol, serviceConfig.APIKey)
-
-	err = web.GetJSON(url, data)
-	if err != nil {
-		return nil, nil
-	}
-
-	if data.Symbol == "" {
-		return nil, nil
-	}
-
-	return &stock{
-		symbol:                data.Symbol,
-		name:                  data.CompanyName,
-		latestPrice:           data.LatestPrice,
-		latestTime:            data.LatestTime,
-		latestSource:          data.LatestSource,
-		change:                data.Change,
-		changePercent:         data.ChangePercent,
-		week52high:            data.Week52High,
-		week52low:             data.Week52Low,
-		ytdChange:             data.YtdChange,
-		peRatio:               data.PeRatio,
-		extendedPrice:         data.ExtendedPrice,
-		extendedChangePercent: data.ExtendedChangePercent,
-	}, nil
-}
-
-func outputStock(q *stock, s *discordgo.Session, channelID string) {
+func outputStock(q *stock, s *discordgo.Session, channelID string, b *bing.Client) {
 	if q == nil {
 		s.ChannelMessageSend(channelID, "no results")
 		return
 	}
-	plus := ""
-	if q.change > 0 {
-		plus = "+"
-	}
-	ePlus := ""
-	if q.extendedChangePercent > 0 {
-		ePlus = "+"
-	}
-	eChange := q.extendedPrice - q.latestPrice
-	ytdPlus := ""
-	if q.ytdChange > 0 {
-		ytdPlus = "+"
-	}
+
+	img := b.GetThumbnail(fmt.Sprintf("%s+logo", q.symbol))
 
 	e := &discordgo.MessageEmbed{
 		Title:       q.symbol + " - " + q.name,
-		Description: q.latestSource + " (" + q.latestTime + ")",
+		Description: q.source + " (" + q.time + ")",
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: img,
+		},
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "Latest Price",
-				Value:  fmt.Sprintf("%.2f", q.latestPrice),
+				Value:  fmt.Sprintf("%s%s", q.price, q.extPrice),
 				Inline: true,
 			},
 			{
 				Name:   "Change",
-				Value:  fmt.Sprintf("%s%.2f (%s%.2f%s)", plus, q.change, plus, q.changePercent*100, "%"),
-				Inline: true,
-			},
-			{
-				Name:   "Year to Date Change",
-				Value:  fmt.Sprintf("%s%.2f%s", ytdPlus, q.ytdChange*100, "%"),
-				Inline: true,
-			},
-			{
-				Name:   "52 Week High",
-				Value:  fmt.Sprintf("%.2f", q.week52high),
-				Inline: true,
-			},
-			{
-				Name:   "52 Week Low",
-				Value:  fmt.Sprintf("%.2f", q.week52low),
-				Inline: true,
-			},
-			{
-				Name:   "P/E Ratio",
-				Value:  fmt.Sprintf("%.2f", q.peRatio),
+				Value:  fmt.Sprintf("%s(%s)%s%s", q.change, q.percentChange, q.extChange, q.extPercentChange),
 				Inline: true,
 			},
 		},
 	}
 
-	if q.extendedChangePercent != 0 {
-		e.Fields = append(e.Fields, []*discordgo.MessageEmbedField{
+	s.ChannelMessageSendEmbed(channelID, e)
+}
+
+func outputBigStock(q *stock, s *discordgo.Session, channelID string, b *bing.Client) {
+	if q == nil {
+		s.ChannelMessageSend(channelID, "no results")
+		return
+	}
+
+	img := b.GetThumbnail(fmt.Sprintf("%s+logo", q.symbol))
+
+	e := &discordgo.MessageEmbed{
+		Title:       q.symbol + " - " + q.name,
+		Description: q.source + " (" + q.time + ")",
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: img,
+		},
+		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "Extended Price",
-				Value:  fmt.Sprintf("%.2f", q.extendedPrice),
+				Name:   "Latest Price",
+				Value:  fmt.Sprintf("%s%s", q.price, q.extPrice),
 				Inline: true,
 			},
 			{
 				Name:   "Change",
-				Value:  fmt.Sprintf("%s%.2f (%s%.2f%s)", ePlus, eChange, ePlus, q.extendedChangePercent*100, "%"),
+				Value:  fmt.Sprintf("%s(%s)%s%s", q.change, q.percentChange, q.extChange, q.extPercentChange),
 				Inline: true,
 			},
-		}...)
+			{
+				Name:   "Market Cap",
+				Value:  q.mktcap,
+				Inline: true,
+			},
+			{
+				Name:   "High",
+				Value:  q.high,
+				Inline: true,
+			},
+			{
+				Name:   "Low",
+				Value:  q.low,
+				Inline: true,
+			},
+			{
+				Name:   "P/E",
+				Value:  q.pe,
+				Inline: true,
+			},
+			{
+				Name:   "YTD High",
+				Value:  q.yearHigh,
+				Inline: true,
+			},
+			{
+				Name:   "YTD Low",
+				Value:  q.yearLow,
+				Inline: true,
+			},
+			{
+				Name:   "EPS",
+				Value:  q.eps,
+				Inline: true,
+			},
+		},
 	}
 	s.ChannelMessageSendEmbed(channelID, e)
 }

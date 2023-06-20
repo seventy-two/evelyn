@@ -2,49 +2,51 @@ package stocks
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/seventy-two/Cara/web"
 )
 
-func getCurrency(symbol string) (*stock, error) {
-	c := &Currency{}
-	url := fmt.Sprintf(serviceConfig.CurrencyURL, symbol, serviceConfig.APIKey)
-	err := web.GetJSON(url, c)
+func getRate(symbol []string) (*discordgo.MessageEmbed, error) {
+	data := &ExchangeRate{}
+
+	err := web.GetJSON(fmt.Sprintf(serviceConfig.ExchangeURL, symbol[0], symbol[1], serviceConfig.APIKey), data)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(c.Results) < 1 {
-		return nil, fmt.Errorf("no results")
-	}
-
-	data := c.Results[0]
-
-	if data.Symbol == "" {
+	if data.RealtimeCurrencyExchangeRate.FromCurrencyCode == "" {
 		return nil, nil
 	}
 
-	return &stock{
-		symbol:      data.Symbol,
-		latestPrice: data.Rate,
+	var rate string
+	if r, err := strconv.ParseFloat(data.RealtimeCurrencyExchangeRate.ExchangeRate, 32); err == nil {
+		rate = fmt.Sprintf("%.2f", r)
+	}
+
+	return &discordgo.MessageEmbed{
+		Title:       fmt.Sprintf("%s → %s", data.RealtimeCurrencyExchangeRate.FromCurrencyCode, data.RealtimeCurrencyExchangeRate.ToCurrencyCode),
+		Description: fmt.Sprintf("%s to %s", data.RealtimeCurrencyExchangeRate.FromCurrencyName, data.RealtimeCurrencyExchangeRate.ToCurrencyName),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Latest Rate",
+				Value:  rate,
+				Inline: false,
+			},
+			{
+				Name:   "Last Refresh",
+				Value:  data.RealtimeCurrencyExchangeRate.LastRefreshed + " " + data.RealtimeCurrencyExchangeRate.TimeZone,
+				Inline: false,
+			},
+		},
 	}, nil
 }
 
-func outputCurrency(q *stock, s *discordgo.Session, channelID string) {
+func outputExchange(q *discordgo.MessageEmbed, s *discordgo.Session, channelID string) {
 	if q == nil {
 		s.ChannelMessageSend(channelID, "no results")
 		return
 	}
-
-	s.ChannelMessageSendEmbed(channelID, &discordgo.MessageEmbed{
-		Title: q.symbol,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "Latest Rate",
-				Value:  fmt.Sprintf("%.2f", q.latestPrice),
-				Inline: true,
-			},
-		},
-	})
+	s.ChannelMessageSendEmbed(channelID, q)
 }

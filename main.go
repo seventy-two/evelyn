@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/seventy-two/evelyn/commands/bing"
 	"github.com/seventy-two/evelyn/commands/dictionary"
 	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/stocks"
@@ -34,6 +35,7 @@ type serviceConfig struct {
 	siegeAPI      *siege.Service
 	beerAPI       *service.Service
 	quotesAPI     *service.Service
+	bingAPI       *service.Service
 }
 
 var appMeta = struct {
@@ -183,7 +185,7 @@ func main() {
 		stocksAPI: &stocks.Service{
 			QuoteURL: *app.String(cli.StringOpt{
 				Name:   "StocksQuoteURL",
-				Value:  "https://cloud.iexapis.com/stable/stock/%s/quote?token=%s",
+				Value:  "https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=%s&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json&events=1",
 				EnvVar: "STOCKS_QUOTE_URL",
 			}),
 			APIKey: *app.String(cli.StringOpt{
@@ -193,28 +195,18 @@ func main() {
 			}),
 			LookupURL: *app.String(cli.StringOpt{
 				Name:   "StocksLookupURL",
-				Value:  "http://autoc.finance.yahoo.com/autoc?query=%s&region=EU&lang=en-GB",
+				Value:  "https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=%s&apikey=%s",
 				EnvVar: "STOCKS_LOOKUP_URL",
 			}),
-			CryptoURL: *app.String(cli.StringOpt{
-				Name:   "StocksCryptoURL",
-				Value:  "https://cloud.iexapis.com/stable/crypto/%s/quote?token=%s",
-				EnvVar: "STOCKS_CRYPTO_URL",
+			EarningsURL: *app.String(cli.StringOpt{
+				Name:   "StocksEarningsURL",
+				Value:  "https://www.alphavantage.co/query?function=EARNINGS_CALENDAR&horizon=1week&apikey=%s",
+				EnvVar: "STOCKS_EARNINGS_URL",
 			}),
-			CurrencyURL: *app.String(cli.StringOpt{
-				Name:   "StocksCurrencyURL",
-				Value:  "https://cloud.iexapis.com/stable/fx/latest?symbols=%s&token=%s",
-				EnvVar: "STOCKS_CURRENCY_URL",
-			}),
-			CurrencyRatesURL: *app.String(cli.StringOpt{
-				Name:   "StocksCurrencyRatesURL",
-				Value:  "https://api.exchangeratesapi.io/latest?base=GBP",
-				EnvVar: "STOCKS_CURRENCY_RATES_URL",
-			}),
-			ChartURL: *app.String(cli.StringOpt{
-				Name:   "ChartURL",
-				Value:  "https://cloud.iexapis.com/stable/stock/%s/intraday-prices?token=%s",
-				EnvVar: "CHART_URL",
+			ExchangeURL: *app.String(cli.StringOpt{
+				Name:   "StocksExchangeURL",
+				Value:  "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=%s&to_currency=%s&apikey=%s",
+				EnvVar: "STOCKS_EXCHANGE_URL",
 			}),
 		},
 		siegeAPI: &siege.Service{
@@ -275,7 +267,22 @@ func main() {
 				EnvVar: "QUOTES_API_URL",
 			}),
 		},
+		bingAPI: &service.Service{
+			APIKey: *app.String(cli.StringOpt{
+				Name:   "BingAPIKey",
+				Value:  "",
+				EnvVar: "BING_API_KEY",
+			}),
+			TargetURL: *app.String(cli.StringOpt{
+				Name:   "BingAPIURL",
+				Value:  "https://api.bing.microsoft.com/v7.0/images/search?q=",
+				EnvVar: "BING_API_URL",
+			}),
+		},
 	}
+
+	Services.stocksAPI.Bing = bing.New(Services.bingAPI)
+
 	dbPath := *app.String(cli.StringOpt{
 		Name:   "DBPath",
 		Value:  "/root/evelynDB",
