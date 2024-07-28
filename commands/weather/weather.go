@@ -74,15 +74,7 @@ func weather(location string) (msg string, err error) {
 	}
 
 	units := "°C"
-	windspeed := "m/s"
-	if data.Flags.Units == "us" {
-		units = "°F"
-		windspeed = "mph"
-	} else if data.Flags.Units == "ca" {
-		windspeed = "km/h"
-	} else if data.Flags.Units == "uk2" {
-		windspeed = "mph"
-	}
+	windspeed := "mph"
 
 	return fmt.Sprintf("%s (%s)\nNow: %s %s %v%s\nToday: %s %v%s/%v%s\nHumidity: %v%% Wind: %v%s Precipitation: %v%%",
 		location,
@@ -159,6 +151,10 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, fmtstr)
 		}
 	case "!set":
+		if len(matches) < 2 {
+			s.ChannelMessageSend(m.ChannelID, "stfu u stupid fuckin retard")
+			return
+		}
 		if matches[1] != "location" {
 			return
 		}

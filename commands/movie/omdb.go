@@ -2,6 +2,7 @@ package movie
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,11 +14,18 @@ var serviceConfig *service.Service
 
 func omdb(matches []string, s *discordgo.Session, channelID string) error {
 	data := &movie{}
+	year := ""
+	if b, _ := regexp.Match("\\((19|20|21)[0-9]{2}\\)", []byte(matches[len(matches)-1])); b {
+		year = "&y=" + strings.TrimSuffix(strings.TrimPrefix(matches[len(matches)-1], "("), ")")
+		matches = matches[:len(matches)-1]
+	}
 	toQuery := strings.Join(matches, "+")
-	err := web.GetJSON(fmt.Sprintf(serviceConfig.TargetURL, toQuery, serviceConfig.APIKey), data)
+	url := fmt.Sprintf(serviceConfig.TargetURL, toQuery, serviceConfig.APIKey, year)
+	fmt.Println(url)
+	err := web.GetJSON(url, data)
 
 	if err != nil {
-		return fmt.Errorf("There was a problem with your request: %w", err)
+		return fmt.Errorf("there was a problem with your request: %w", err)
 	}
 	if data.Title == "" {
 		return fmt.Errorf("not found")
@@ -33,6 +41,7 @@ func omdb(matches []string, s *discordgo.Session, channelID string) error {
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s (%s)", data.Title, data.Year),
+		URL:         fmt.Sprintf("https://www.imdb.com/title/%s", data.ImdbID),
 		Description: data.Plot,
 		Fields: []*discordgo.MessageEmbedField{
 			{

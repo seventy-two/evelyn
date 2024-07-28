@@ -77,10 +77,12 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "!watchlist", "!wl":
 		serviceConfig.Storage.handleWatchlistRequest(s, m)
 	case "!earnings":
-		cal := GetCalendar()
-		if cal != "" {
-			s.ChannelMessageSend(m.ChannelID, cal)
+		if len(matches) > 1 {
+			setEarnings(strings.Join(matches[1:], " "))
+		} else if e := getEarnings(); e != "" {
+			s.ChannelMessageSend(m.ChannelID, e)
 		}
+		return
 	case "!ex":
 		if len(matches) != 3 {
 			s.ChannelMessageSend(m.ChannelID, "!ex expects exactly 2 symbols.")
