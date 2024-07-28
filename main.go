@@ -5,6 +5,7 @@ import (
 
 	"github.com/seventy-two/evelyn/commands/bing"
 	"github.com/seventy-two/evelyn/commands/dictionary"
+	"github.com/seventy-two/evelyn/commands/olympics"
 	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/commands/weather"
@@ -36,7 +37,7 @@ type serviceConfig struct {
 	beerAPI       *service.Service
 	quotesAPI     *service.Service
 	bingAPI       *service.Service
-	olympicsAPI   *service.Service
+	olympicsAPI   *olympics.Service
 }
 
 var appMeta = struct {
@@ -280,11 +281,16 @@ func main() {
 				EnvVar: "BING_API_URL",
 			}),
 		},
-		olympicsAPI: &service.Service{
-			TargetURL: *app.String(cli.StringOpt{
+		olympicsAPI: &olympics.Service{
+			MedalURL: *app.String(cli.StringOpt{
 				Name:   "OlympicsAPIURL",
 				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/medal-table.json",
 				EnvVar: "OLYMPICS_API_URL",
+			}),
+			EventURL: *app.String(cli.StringOpt{
+				Name:   "EventAPIURL",
+				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/medal-list.json",
+				EnvVar: "EVENT_API_URL",
 			}),
 		},
 	}

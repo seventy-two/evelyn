@@ -2,6 +2,7 @@ package olympics
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -10,11 +11,15 @@ import (
 	"github.com/mgutz/ansi"
 	"github.com/seventy-two/Cara/web"
 	"github.com/seventy-two/columnize"
-	"github.com/seventy-two/evelyn/service"
 )
 
+type Service struct {
+	MedalURL string
+	EventURL string
+}
+
 var (
-	serviceConfig *service.Service
+	serviceConfig *Service
 
 	b  = ansi.ColorFunc("blue")
 	g  = ansi.ColorFunc("yellow")
@@ -31,8 +36,7 @@ var (
 
 func medals() ([]string, error) {
 	m := &Olympics{}
-	fmt.Println(serviceConfig.TargetURL)
-	err := web.GetJSON(serviceConfig.TargetURL, m)
+	err := web.GetJSON(serviceConfig.MedalURL, m)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +62,45 @@ func olympicToStrings(o *Olympics) []string {
 	return out
 }
 
-func RegisterService(dg *discordgo.Session, config *service.Service) {
+func events() ([]string, error) {
+	m := &Events{}
+	err := web.GetJSON(serviceConfig.EventURL, m)
+	if err != nil {
+		return nil, err
+	}
+
+	return eventsToStrings(m), nil
+}
+
+func eventsToStrings(e *Events) []string {
+	sort.Slice(e.Events, func(i, j int) bool {
+		return e.Events[i].EndTime.After(e.Events[j].EndTime)
+	})
+
+	var out []string
+	for _, ev := range e.Events {
+		if len(out) > 5 {
+			break
+		}
+		var s string
+		if len(ev.Gold) == 1 && ev.Gold[0].CompetitorName != ev.Gold[0].Country {
+			s = fmt.Sprintf("%s|%s|%s|%s", b(fmt.Sprintf("%s - %s %s", ev.Discipline, ev.Gender, ev.Name)),
+				g(fmt.Sprintf("%s (%s)", ev.Gold[0].Country, ev.Gold[0].CompetitorName)),
+				si(fmt.Sprintf("%s (%s)", ev.Silver[0].Country, ev.Silver[0].CompetitorName)),
+				br(fmt.Sprintf("%s (%s)", ev.Bronze[0].Country, ev.Bronze[0].CompetitorName)))
+		}
+		if len(ev.Gold) > 2 {
+			s = fmt.Sprintf("%s|%s|%s|%s", b(ev.Name),
+				g(ev.Gold[0].Country),
+				si(ev.Silver[0].Country),
+				br(ev.Bronze[0].Country))
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+func RegisterService(dg *discordgo.Session, config *Service) {
 	serviceConfig = config
 	dg.AddHandler(invokeCommand)
 }
@@ -85,7 +127,17 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		str = strings.ReplaceAll(str, br("B"), bru("B"))
 		str = strings.ReplaceAll(str, p("T"), pu("T"))
 
-		fmt.Println(str)
+		if str != "" {
+			fmtstr := fmt.Sprintf("```ansi\n%s```", str)
+			s.ChannelMessageSend(m.ChannelID, fmtstr)
+		}
+	case "!events":
+		res, err := events()
+		if err != nil {
+			str = fmt.Sprintf("an error occured (%s)", err)
+		} else {
+			str = columnize.SimpleFormat(res)
+		}
 		if str != "" {
 			fmtstr := fmt.Sprintf("```ansi\n%s```", str)
 			s.ChannelMessageSend(m.ChannelID, fmtstr)
