@@ -11,6 +11,7 @@ import (
 
 	"github.com/seventy-two/evelyn/commands/beer"
 	"github.com/seventy-two/evelyn/commands/bing"
+	"github.com/seventy-two/evelyn/commands/olympics"
 	"github.com/seventy-two/evelyn/commands/stocks"
 
 	"github.com/bwmarrin/discordgo"
@@ -94,6 +95,9 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	}
 	if services.bingAPI != nil {
 		bing.RegisterService(dg, services.bingAPI)
+	}
+	if services.olympicsAPI != nil {
+		olympics.RegisterService(dg, services.olympicsAPI)
 	}
 
 }

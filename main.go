@@ -36,6 +36,7 @@ type serviceConfig struct {
 	beerAPI       *service.Service
 	quotesAPI     *service.Service
 	bingAPI       *service.Service
+	olympicsAPI   *service.Service
 }
 
 var appMeta = struct {
@@ -140,7 +141,7 @@ func main() {
 		movieAPI: &service.Service{
 			TargetURL: *app.String(cli.StringOpt{
 				Name:   "MovieURL",
-				Value:  "http://www.omdbapi.com/?t=%s&plot=short&apikey=%s",
+				Value:  "http://www.omdbapi.com/?t=%s&plot=short&apikey=%s%s",
 				EnvVar: "MOVIE_URL",
 			}),
 			APIKey: *app.String(cli.StringOpt{
@@ -277,6 +278,13 @@ func main() {
 				Name:   "BingAPIURL",
 				Value:  "https://api.bing.microsoft.com/v7.0/images/search?q=",
 				EnvVar: "BING_API_URL",
+			}),
+		},
+		olympicsAPI: &service.Service{
+			TargetURL: *app.String(cli.StringOpt{
+				Name:   "OlympicsAPIURL",
+				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/medal-table.json",
+				EnvVar: "OLYMPICS_API_URL",
 			}),
 		},
 	}

@@ -13,6 +13,12 @@ import (
 	"github.com/seventy-two/Cara/web"
 )
 
+var relevantTickers = []string{"SCHW", "FBK", "BAC", "UAL", "LMT", "IBKR",
+	"GS", "JNJ", "ERIC", "TSLA", "PG", "NFLX", "MS",
+	"LRCX", "LVS", "USB", "NDAQ", "ZION", "STLD", "T",
+	"AAL", "TSM", "NOK", "WDFC", "FCX", "UNP",
+	"AXP", "HBAN", "IPG"}
+
 func GetCalendar() string {
 	data, err := web.GetBody(fmt.Sprintf(serviceConfig.EarningsURL, serviceConfig.APIKey))
 	if err != nil {
@@ -24,16 +30,23 @@ func GetCalendar() string {
 		fmt.Println(err)
 		return ""
 	}
-	sort.Slice(e, func(i, j int) bool {
-		return e[i].FiscalDateEnding.Before(e[j].FiscalDateEnding)
-	})
+	var newE []Earnings
+	for _, t := range e {
+		for _, ticker := range relevantTickers {
+			if t.Symbol == ticker {
+				newE = append(newE, t)
+			}
+		}
+	}
 
-	e = e[1:15]
+	sort.Slice(newE, func(i, j int) bool {
+		return newE[i].ReportDate.Before(newE[j].ReportDate)
+	})
 
 	var lines []string
 
-	for _, l := range e {
-		lines = append(lines, fmt.Sprintf("%s|%s|%s|Fiscal End: %s|Est: %.2f|%s", l.Symbol, l.Name, l.ReportDate.Format("2006-01-02"), l.FiscalDateEnding.Format("2006-01-02"), l.Estimate, l.Currency))
+	for _, l := range newE {
+		lines = append(lines, fmt.Sprintf("%s|%s|%s", l.Symbol, l.Name, l.ReportDate.Format("Monday")))
 	}
 	return fmt.Sprintf("```%s```", columnize.SimpleFormat(lines))
 }
