@@ -53,3 +53,28 @@ type Events struct {
 		} `json:"bronze"`
 	} `json:"events"`
 }
+
+type Schedule []struct {
+	Date   string `json:"date"`
+	Events []struct {
+		Status         string    `json:"status"`
+		Discipline     string    `json:"discipline"`
+		EventID        string    `json:"eventId"`
+		Name           string    `json:"name"`
+		Gender         string    `json:"gender"`
+		Round          string    `json:"round"`
+		Group          string    `json:"group"`
+		ScheduleStatus string    `json:"scheduleStatus"`
+		StartTime      time.Time `json:"startTime"`
+		EndTime        time.Time `json:"endTime"`
+		Venue          string    `json:"venue"`
+		Location       string    `json:"location"`
+		Country        string    `json:"country"`
+		Competitors    []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"competitors"`
+		Winner       int    `json:"winner"`
+		MedalAwarded string `json:"medalAwarded"`
+	} `json:"events"`
+}

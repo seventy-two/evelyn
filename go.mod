@@ -5,12 +5,14 @@ go 1.22
 require (
 	github.com/bwmarrin/discordgo v0.23.2
 	github.com/dgraph-io/badger/v2 v2.2007.2
+	github.com/dustin/go-humanize v1.0.1
 	github.com/jawher/mow.cli v1.2.0
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/seventy-two/Cara v0.0.0-20160914220715-4d6a1d2c169e
 	github.com/seventy-two/columnize v0.0.0-20200819155840-d363dedc9af5
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/text v0.10.0
 	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
 )
 
@@ -20,7 +22,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect

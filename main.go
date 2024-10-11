@@ -292,6 +292,11 @@ func main() {
 				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/medal-list.json",
 				EnvVar: "EVENT_API_URL",
 			}),
+			ScheduleURL: *app.String(cli.StringOpt{
+				Name:   "ScheduleAPIURL",
+				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/daily-schedule.json",
+				EnvVar: "SCHEDULE_API_URL",
+			}),
 		},
 	}
 
