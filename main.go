@@ -9,6 +9,7 @@ import (
 	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/commands/weather"
+	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/service"
 
 	"github.com/seventy-two/evelyn/commands/dota"
@@ -38,6 +39,7 @@ type serviceConfig struct {
 	quotesAPI     *service.Service
 	bingAPI       *service.Service
 	olympicsAPI   *olympics.Service
+	generationAPI *generation.Service
 }
 
 var appMeta = struct {
@@ -298,6 +300,23 @@ func main() {
 				EnvVar: "SCHEDULE_API_URL",
 			}),
 		},
+		generationAPI: &generation.Service{
+			APIKey: *app.String(cli.StringOpt{
+				Name:   "GenerationAPIKey",
+				Value:  "",
+				EnvVar: "GENERATION_API_KEY",
+			}),
+			YoutubeURL: *app.String(cli.StringOpt{
+				Name:   "GenerationYoutubeURL",
+				Value:  "https://www.googleapis.com/youtube/v3/videos?id=%s&part=contentDetails&key=%s",
+				EnvVar: "GENERATION_YOUTUBE_URL",
+			}),
+			YoutubeAPIKey: *app.String(cli.StringOpt{
+				Name:   "GenerationYoutubeAPIKey",
+				Value:  "",
+				EnvVar: "GENERATION_YOUTUBE_API_KEY",
+			}),
+		},
 	}
 
 	Services.stocksAPI.Bing = bing.New(Services.bingAPI)
@@ -308,8 +327,20 @@ func main() {
 		EnvVar: "DB_PATH",
 	})
 
+	logPath := *app.String(cli.StringOpt{
+		Name:   "LogPath",
+		Value:  "/root/evelyn.new.log",
+		EnvVar: "LOG_PATH",
+	})
+
+	errPath := *app.String(cli.StringOpt{
+		Name:   "ErrPath",
+		Value:  "/root/evelyn.err",
+		EnvVar: "ERR_PATH",
+	})
+
 	app.Action = func() {
-		start(app, Services, dbPath)
+		start(app, Services, dbPath, logPath, errPath)
 	}
 
 	app.Run(os.Args)

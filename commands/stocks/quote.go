@@ -12,6 +12,8 @@ func lookupAndGetStock(query string) (*stock, error) {
 	symbol, err := lookupStock(query)
 	if err != nil {
 		fmt.Println(err)
+	}
+	if symbol == "" {
 		symbol = query
 	}
 	s, err := getStockData(symbol)
@@ -33,7 +35,6 @@ func getStockData(symbol string) ([]*stock, error) {
 	}
 	var stockz []*stock
 	for _, s := range stocks.FormattedQuoteResult.FormattedQuote {
-
 		price := s.Last
 		change := s.Change
 		percentChange := s.ChangePct
@@ -50,7 +51,9 @@ func getStockData(symbol string) ([]*stock, error) {
 			source = s.ExtendedMktQuote.Source
 			time = s.ExtendedMktQuote.LastTimedate
 		}
-
+		if s.Name == "" {
+			continue
+		}
 		stockz = append(stockz, &stock{
 			symbol:           s.Symbol,
 			name:             s.Name,
@@ -128,7 +131,7 @@ func outputBigStock(q *stock, s *discordgo.Session, channelID string, b *bing.Cl
 		return
 	}
 
-	img := b.GetThumbnail(fmt.Sprintf("%s+logo", q.symbol))
+	img := b.GetThumbnail(fmt.Sprintf("%s+logo", q.name))
 
 	e := &discordgo.MessageEmbed{
 		Title:       q.symbol + " - " + q.name,

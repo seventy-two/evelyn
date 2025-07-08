@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +12,11 @@ import (
 	"github.com/seventy-two/evelyn/commands/bing"
 	"github.com/seventy-two/evelyn/commands/olympics"
 	"github.com/seventy-two/evelyn/commands/stocks"
+	"github.com/seventy-two/evelyn/passive/generation"
+	"github.com/seventy-two/evelyn/passive/images"
+	"github.com/seventy-two/evelyn/passive/shitpost"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/bwmarrin/discordgo"
 	cli "github.com/jawher/mow.cli"
@@ -29,10 +33,10 @@ import (
 )
 
 func startedUp(s *discordgo.Session, event *discordgo.Ready) {
-	s.UserUpdateStatus(discordgo.Status("Listening to ! prefix"))
+	s.UpdateCustomStatus("Listening to ! prefix")
 }
 
-func start(app *cli.Cli, services *serviceConfig, dbPath string) {
+func start(app *cli.Cli, services *serviceConfig, dbPath string, logFile string, errorLog string) {
 	dg, _ := discordgo.New(fmt.Sprintf("Bot %s", services.discordAPI.APIKey))
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	go registerServices(dg, services, dbPath)
@@ -42,10 +46,17 @@ func start(app *cli.Cli, services *serviceConfig, dbPath string) {
 		log.Fatalf("Error opening Discord session: %s", err)
 	}
 
-	dg.AddHandler(logger)
+	errLog, err := os.OpenFile(errorLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+
+	log.SetOutput(errLog)
+
+	dg.AddHandler(createLogger(logFile))
 
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	dg.Close()
@@ -99,9 +110,21 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	if services.olympicsAPI != nil {
 		olympics.RegisterService(dg, services.olympicsAPI)
 	}
+	if services.generationAPI != nil {
+		generation.RegisterService(dg, services.generationAPI)
+	}
 
+	shitpost.RegisterService(dg, &shitpost.Service{Db: db})
+	images.RegisterService(dg, &images.Service{})
 }
 
-func logger(s *discordgo.Session, m *discordgo.MessageCreate) {
-	fmt.Println(m.Author.ID + " | " + m.Author.Username + " | " + m.Content)
+func createLogger(logfile string) func(s *discordgo.Session, m *discordgo.MessageCreate) {
+	f, err := os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
+		content := fmt.Sprintf("[%s] %s (%s): %s", m.Timestamp, m.Author.Username, m.Author.ID, m.Content)
+		fmt.Fprintln(f, content)
+	}
 }

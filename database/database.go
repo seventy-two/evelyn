@@ -2,9 +2,9 @@ package database
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
-	"github.com/bwmarrin/discordgo"
 	badger "github.com/dgraph-io/badger/v2"
 )
 
@@ -25,9 +25,9 @@ func NewDatabase(dbPath string) *Database {
 
 // Cunt is a Discord user from Evelyn's perspective
 type Cunt struct {
-	ID     string
-	Member discordgo.Member
-	Info   *CuntInfo
+	ID string
+	// Member discordgo.Member
+	Info *CuntInfo
 }
 
 // CuntInfo contains all stored information for a cunt
@@ -108,6 +108,32 @@ func (d *Database) RemoveCuntInfo(id string, c *CuntInfo) error {
 		return err
 	}
 	return nil
+}
+
+func (d *Database) GetCunts() ([]*Cunt, error) {
+	var cunts []*Cunt
+	if err := d.db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			var c Cunt
+			v, err := item.ValueCopy(nil)
+			if err != nil {
+				return fmt.Errorf("valuecopy %w", err)
+			}
+			if err := json.Unmarshal(v, &c); err != nil {
+				fmt.Println(string(v))
+				return fmt.Errorf("unmarshall %w", err)
+			}
+			cunts = append(cunts, &c)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return cunts, nil
 }
 
 // NewCunt creates a new Cunt with the given CuntInfo
