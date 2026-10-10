@@ -2,8 +2,10 @@ package database
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	badger "github.com/dgraph-io/badger/v2"
 )
@@ -118,6 +120,9 @@ func (d *Database) GetCunts() ([]*Cunt, error) {
 
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
+			if strings.HasPrefix(string(item.Key()), valuePrefix) {
+				continue
+			}
 			var c Cunt
 			v, err := item.ValueCopy(nil)
 			if err != nil {
@@ -181,4 +186,40 @@ func inverseMerge(c1, c2 *CuntInfo) *CuntInfo {
 	}
 	c2.Watchlist = newWL
 	return c2
+}
+
+// valuePrefix marks keys holding values other than Cunts, which are keyed by
+// Discord user ID.
+const valuePrefix = "kv:"
+
+// SetValue stores v as JSON under key.
+func (d *Database) SetValue(key string, v interface{}) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	return d.db.Update(func(txn *badger.Txn) error {
+		return txn.Set([]byte(valuePrefix+key), b)
+	})
+}
+
+// GetValue loads the JSON stored under key into v. It reports false if
+// nothing is stored there.
+func (d *Database) GetValue(key string, v interface{}) (bool, error) {
+	var b []byte
+	err := d.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(valuePrefix + key))
+		if err != nil {
+			return err
+		}
+		b, err = item.ValueCopy(nil)
+		return err
+	})
+	if errors.Is(err, badger.ErrKeyNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, json.Unmarshal(b, v)
 }

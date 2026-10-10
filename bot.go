@@ -12,6 +12,7 @@ import (
 	"github.com/seventy-two/evelyn/commands/bing"
 	"github.com/seventy-two/evelyn/commands/help"
 	"github.com/seventy-two/evelyn/commands/stocks"
+	"github.com/seventy-two/evelyn/passive/autotrader"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/passive/images"
 	"github.com/seventy-two/evelyn/passive/shitpost"
@@ -115,6 +116,11 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	if services.generationAPI != nil {
 		generation.RegisterService(dg, services.generationAPI)
 		router.Add(generation.SlashCommands()...)
+	}
+
+	if services.autotraderAPI != nil {
+		services.autotraderAPI.Store = db
+		autotrader.RegisterService(dg, services.autotraderAPI)
 	}
 
 	shitpost.RegisterService(dg, &shitpost.Service{Db: db})

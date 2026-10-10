@@ -2,10 +2,14 @@ package main
 
 import (
 	"os"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/seventy-two/evelyn/commands/dictionary"
 	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/commands/weather"
+	"github.com/seventy-two/evelyn/passive/autotrader"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/service"
 
@@ -32,6 +36,7 @@ type serviceConfig struct {
 	quotesAPI     *service.Service
 	bingAPI       *service.Service
 	generationAPI *generation.Service
+	autotraderAPI *autotrader.Service
 }
 
 var appMeta = struct {
@@ -250,6 +255,29 @@ func main() {
 		},
 	}
 
+	Services.autotraderAPI = &autotrader.Service{
+		SearchURL: *app.String(cli.StringOpt{
+			Name:   "AutotraderSearchURL",
+			Value:  "",
+			EnvVar: "AUTOTRADER_SEARCH_URL",
+		}),
+		ChannelID: *app.String(cli.StringOpt{
+			Name:   "AutotraderChannelID",
+			Value:  "237647756049514498",
+			EnvVar: "AUTOTRADER_CHANNEL_ID",
+		}),
+		UserID: *app.String(cli.StringOpt{
+			Name:   "AutotraderUserID",
+			Value:  "176722208243187712",
+			EnvVar: "AUTOTRADER_USER_ID",
+		}),
+	}
+	autotraderInterval := *app.String(cli.StringOpt{
+		Name:   "AutotraderInterval",
+		Value:  "2h",
+		EnvVar: "AUTOTRADER_INTERVAL",
+	})
+
 	dbPath := *app.String(cli.StringOpt{
 		Name:   "DBPath",
 		Value:  "/root/evelynDB",
@@ -269,6 +297,12 @@ func main() {
 	})
 
 	app.Action = func() {
+		interval, err := time.ParseDuration(autotraderInterval)
+		if err != nil || interval < 10*time.Minute {
+			log.Errorf("AutoTrader watcher off: AUTOTRADER_INTERVAL must be a duration of at least 10m, got %q", autotraderInterval)
+			Services.autotraderAPI.SearchURL = ""
+		}
+		Services.autotraderAPI.Interval = interval
 		start(app, Services, dbPath, logPath, errPath)
 	}
 
