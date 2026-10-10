@@ -59,8 +59,6 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       q.author,
 			Description: q.quote,
-			// ZenQuotes' free tier asks for attribution.
-			Footer: &discordgo.MessageEmbedFooter{Text: "Quotes provided by ZenQuotes.io"},
 		})
 	}
 }
