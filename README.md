@@ -65,11 +65,13 @@ Quotes and movers come from CNBC, symbol search and exchange rates from
 These run without a command:
 
 - **AI chat** (main server only): mention the bot to chat with Google Gemini.
-  It can see images in or replied to by your message. `!reset` clears the
-  chat history.
+  It can see images in or replied to by your message, and replying to one of
+  its messages continues that conversation. `!reset` (bot owner only) clears
+  the chat history.
 - **YouTube summaries** (main server only): posts a summary of linked YouTube
   videos up to 20 minutes long, or any length if you mention the bot.
-- **Voice note summaries** (main server only): summarises `.ogg` voice notes.
+- **Voice note transcription** (main server only): transcribes `.ogg` voice
+  notes with Gemini's speech-to-text model.
 - **Vertical media "fix"**: reposts tall images stretched to landscape
   (occasionally deep-fried) and tall videos rotated 90°.
 

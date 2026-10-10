@@ -36,7 +36,7 @@ Commands
 !beer <name>             Beer search
 
 !qotd                    Quote of the day
-!reset                   Reset AI chat history
+!reset                   Reset AI chat history (72 only)
 
 Every command also works as a slash command, e.g. /w, /m, /sp
 ` + "```"

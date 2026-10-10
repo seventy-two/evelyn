@@ -7,6 +7,6 @@ import (
 // SlashCommands returns the slash command equivalents of this package's ! commands.
 func SlashCommands() []*slash.Command {
 	return []*slash.Command{
-		{Name: "reset", Description: "Reset AI chat history", Handler: invokeCommand},
+		{Name: "reset", Description: "Reset AI chat history (72 only)", Handler: invokeCommand},
 	}
 }
