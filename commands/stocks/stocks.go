@@ -46,13 +46,22 @@ func RegisterService(dg *discordgo.Session, config *Service) {
 	dg.AddHandler(invokeCommand)
 }
 
+// allowedChannel reports whether stock commands may be used in the channel.
+func allowedChannel(channelID string) bool {
+	switch channelID {
+	case "819577977998147604", "848603390408654878", "612390886785024043":
+		return true
+	}
+	return false
+}
+
 func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 	matches := strings.Split(m.Content, " ")
 
-	if m.ChannelID != "819577977998147604" && m.ChannelID != "848603390408654878" && m.ChannelID != "612390886785024043" {
+	if !allowedChannel(m.ChannelID) {
 		return
 	}
 

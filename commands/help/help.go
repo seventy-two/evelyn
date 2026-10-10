@@ -47,6 +47,8 @@ Commands
 
 !qotd                    Quote of the day
 !reset                   Reset AI chat history
+
+Every command also works as a slash command, e.g. /w, /m, /sp
 ` + "```"
 
 // RegisterService registers the !help command handler.

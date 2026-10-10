@@ -17,6 +17,7 @@ import (
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/passive/images"
 	"github.com/seventy-two/evelyn/passive/shitpost"
+	"github.com/seventy-two/evelyn/slash"
 
 	log "github.com/sirupsen/logrus"
 
@@ -35,13 +36,14 @@ import (
 )
 
 func startedUp(s *discordgo.Session, event *discordgo.Ready) {
-	s.UpdateCustomStatus("Listening to ! prefix")
+	s.UpdateCustomStatus("Listening to ! prefix and /commands")
 }
 
 func start(app *cli.Cli, services *serviceConfig, dbPath string, logFile string, errorLog string) {
 	dg, _ := discordgo.New(fmt.Sprintf("Bot %s", services.discordAPI.APIKey))
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
-	go registerServices(dg, services, dbPath)
+	logger := createLogger(logFile)
+	go registerServices(dg, services, dbPath, logger)
 	dg.AddHandler(startedUp)
 	err := dg.Open()
 	if err != nil {
@@ -55,7 +57,7 @@ func start(app *cli.Cli, services *serviceConfig, dbPath string, logFile string,
 
 	log.SetOutput(errLog)
 
-	dg.AddHandler(createLogger(logFile))
+	dg.AddHandler(logger)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
@@ -64,64 +66,85 @@ func start(app *cli.Cli, services *serviceConfig, dbPath string, logFile string,
 	dg.Close()
 }
 
-func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath string) {
+func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath string, logger func(*discordgo.Session, *discordgo.MessageCreate)) {
 
 	db := database.NewDatabase(dbPath)
+	router := slash.NewRouter(logger)
 
 	if services.dictionaryAPI != nil {
 		dictionary.RegisterService(dg, services.dictionaryAPI)
+		router.Add(dictionary.SlashCommands()...)
 	}
 	if services.dotaAPI != nil {
 		dota.RegisterService(dg, services.dotaAPI)
+		router.Add(dota.SlashCommands()...)
 	}
 	if services.nflAPI != nil {
 		nfl.RegisterService(dg, services.nflAPI)
+		router.Add(nfl.SlashCommands()...)
 	}
 	if services.movieAPI != nil {
 		movie.RegisterService(dg, services.movieAPI)
+		router.Add(movie.SlashCommands()...)
 	}
 	if services.stocksAPI != nil {
 		services.stocksAPI.Storage = stocks.NewWatchlistStorage(db)
 		stocks.RegisterService(dg, services.stocksAPI)
+		router.Add(stocks.SlashCommands()...)
 	}
 	if services.tvAPI != nil {
 		tv.RegisterService(dg, services.tvAPI)
+		router.Add(tv.SlashCommands()...)
 	}
 	if services.urbanAPI != nil {
 		urbandictionary.RegisterService(dg, services.urbanAPI)
+		router.Add(urbandictionary.SlashCommands()...)
 	}
 	if services.weatherAPI != nil {
 		services.weatherAPI.LocationStorage = &weather.LocationStorage{Db: db}
 		weather.RegisterService(dg, services.weatherAPI)
+		router.Add(weather.SlashCommands()...)
 	}
 	if services.mathAPI != nil {
 		math.RegisterService(dg, services.mathAPI)
+		router.Add(math.SlashCommands()...)
 	}
 	if services.siegeAPI != nil {
 		siege.RegisterService(dg, services.siegeAPI)
+		router.Add(siege.SlashCommands()...)
 	}
 	if services.beerAPI != nil {
 		beer.RegisterService(dg, services.beerAPI)
+		router.Add(beer.SlashCommands()...)
 	}
 	if services.quotesAPI != nil {
 		quotes.RegisterService(dg, services.quotesAPI)
+		router.Add(quotes.SlashCommands()...)
 	}
 	if services.bingAPI != nil {
 		bing.RegisterService(dg, services.bingAPI)
 	}
 	if services.olympicsAPI != nil {
 		olympics.RegisterService(dg, services.olympicsAPI)
+		router.Add(olympics.SlashCommands()...)
 	}
 	if services.wcAPI != nil {
 		wc.RegisterService(dg, services.wcAPI)
+		router.Add(wc.SlashCommands()...)
 	}
 	if services.generationAPI != nil {
 		generation.RegisterService(dg, services.generationAPI)
+		router.Add(generation.SlashCommands()...)
 	}
 
 	shitpost.RegisterService(dg, &shitpost.Service{Db: db})
 	images.RegisterService(dg, &images.Service{})
 	help.RegisterService(dg)
+	router.Add(help.SlashCommands()...)
+
+	if err := router.Register(dg); err != nil {
+		log.Errorf("slash commands unavailable: %s", err)
+	}
 }
 
 func createLogger(logfile string) func(s *discordgo.Session, m *discordgo.MessageCreate) {
