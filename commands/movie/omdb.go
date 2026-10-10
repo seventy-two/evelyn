@@ -13,6 +13,10 @@ import (
 
 var serviceConfig *service.Service
 
+// letterboxdReviews adds a random Letterboxd review to movie results. Off
+// while Letterboxd's Cloudflare protection blocks every request.
+const letterboxdReviews = false
+
 func omdb(matches []string, s *discordgo.Session, channelID string) error {
 	data := &movie{}
 	year := ""
@@ -74,7 +78,7 @@ func omdb(matches []string, s *discordgo.Session, channelID string) error {
 	}
 
 	// Try to get a random Letterboxd review
-	if review := letterboxd.GetRandomReview(data.Title); review != nil {
+	if review := randomReview(data.Title); review != nil {
 		reviewText := review.ReviewText
 		if len(reviewText) > 600 {
 			reviewText = reviewText[:600] + "..."
@@ -120,4 +124,11 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, err.Error())
 		}
 	}
+}
+
+func randomReview(title string) *letterboxd.Review {
+	if !letterboxdReviews {
+		return nil
+	}
+	return letterboxd.GetRandomReview(title)
 }
