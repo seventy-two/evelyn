@@ -2,27 +2,41 @@ package nfl
 
 import (
 	"encoding/json"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestNfl(t *testing.T) {
-	testResponse := `{"2019010500":{"home":{"score":{"1":0,"2":0,"3":0,"4":0,"5":0,"T":0},"abbr":"HOU","to":3},"away":{"score":{"1":0,"2":0,"3":0,"4":0,"5":0,"T":0},"abbr":"IND","to":3},"bp":0,"down":0,"togo":0,"clock":"15:00","posteam":"IND","note":null,"redzone":false,"stadium":"NRG Stadium","media":{"radio":{"home":null,"away":null},"tv":"ESPN","sat":null,"sathd":null},"yl":"","qtr":"Pregame"},"2019010501":{"home":{"score":{"1":null,"2":null,"3":null,"4":null,"5":null,"T":null},"abbr":"DAL","to":null},"away":{"score":{"1":null,"2":null,"3":null,"4":null,"5":null,"T":null},"abbr":"SEA","to":null},"bp":0,"down":null,"togo":null,"clock":null,"posteam":null,"note":null,"redzone":null,"stadium":"AT&T Stadium","media":{"radio":{"home":null,"away":null},"tv":"FOX","sat":null,"sathd":null},"yl":null,"qtr":null},"2019010600":{"home":{"score":{"1":null,"2":null,"3":null,"4":null,"5":null,"T":null},"abbr":"BAL","to":null},"away":{"score":{"1":null,"2":null,"3":null,"4":null,"5":null,"T":null},"abbr":"LAC","to":null},"bp":0,"down":null,"togo":null,"clock":null,"posteam":null,"note":null,"redzone":null,"stadium":"M&T Bank Stadium","media":{"radio":{"home":null,"away":null},"tv":"CBS","sat":null,"sathd":null},"yl":null,"qtr":null},"2019010601":{"home":{"score":{"1":null,"2":null,"3":null,"4":null,"5":null,"T":null},"abbr":"CHI","to":null},"away":{"score":{"1":null,"2":null,"3":null,"4":null,"5":null,"T":null},"abbr":"PHI","to":null},"bp":0,"down":null,"togo":null,"clock":null,"posteam":null,"note":null,"redzone":null,"stadium":"Soldier Field","media":{"radio":{"home":null,"away":null},"tv":"NBC","sat":null,"sathd":null},"yl":null,"qtr":null}}`
-	m := map[string]game{}
-	err := json.Unmarshal([]byte(testResponse), &m)
-	if err != nil {
-		log.Print(err)
-	}
-	var out []string
-	for _, g := range m {
-		if g.Qtr == nil {
-			continue
-		}
-		out = append(out, createGameString(&g))
-	}
+const testScoreboard = `{"events":[
+{"date":"2026-10-09T00:15Z","competitions":[{
+	"competitors":[
+		{"homeAway":"home","score":"16","team":{"id":"6","shortDisplayName":"Cowboys"}},
+		{"homeAway":"away","score":"24","team":{"id":"27","shortDisplayName":"Buccaneers"}}],
+	"status":{"type":{"state":"post","shortDetail":"Final"}},
+	"broadcasts":[{"names":["Prime Video"]}]}]},
+{"date":"2026-10-11T17:00Z","competitions":[{
+	"competitors":[
+		{"homeAway":"home","score":"10","team":{"id":"9","shortDisplayName":"Packers"}},
+		{"homeAway":"away","score":"7","team":{"id":"3","shortDisplayName":"Bears"}}],
+	"status":{"type":{"state":"in","shortDetail":"8:24 - 2nd"}},
+	"situation":{"downDistanceText":"3rd & 4 at GB 35","possession":"3"},
+	"broadcasts":[{"names":["Fox"]}]}]},
+{"date":"2026-10-11T13:30Z","competitions":[{
+	"competitors":[
+		{"homeAway":"home","score":"0","team":{"id":"30","shortDisplayName":"Jaguars"}},
+		{"homeAway":"away","score":"0","team":{"id":"21","shortDisplayName":"Eagles"}}],
+	"status":{"type":{"state":"pre","shortDetail":"10/11 - 9:30 AM EDT"}},
+	"broadcasts":[{"names":["NFL Net"]}]}]}
+]}`
 
-	assert.Equal(t, 1, len(out))
-	assert.Equal(t, `0 | - | Indianapolis Colts | @ | Houston Texans | - | 0 | 15:00 Pregame | ESPN`, out[0])
+func TestGameLines(t *testing.T) {
+	sb := &scoreboard{}
+	require.NoError(t, json.Unmarshal([]byte(testScoreboard), sb))
+
+	assert.Equal(t, []string{
+		"24 | Buccaneers | @ | Cowboys | 16 | Final",
+		"7 | >Bears | @ | Packers | 10 | 8:24 - 2nd 3rd & 4 at GB 35",
+		" | Eagles | @ | Jaguars |  | Sun 14:30 NFL Net",
+	}, gameLines(sb))
 }

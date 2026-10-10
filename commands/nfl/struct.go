@@ -1,51 +1,31 @@
 package nfl
 
-type nflResponse struct {
-	Game game `json:"-"`
-}
-
-type game struct {
-	Home struct {
-		Score struct {
-			Num1 int `json:"1"`
-			Num2 int `json:"2"`
-			Num3 int `json:"3"`
-			Num4 int `json:"4"`
-			Num5 int `json:"5"`
-			T    int `json:"T"`
-		} `json:"score"`
-		Abbr string `json:"abbr"`
-		To   int    `json:"to"`
-	} `json:"home"`
-	Away struct {
-		Score struct {
-			Num1 int `json:"1"`
-			Num2 int `json:"2"`
-			Num3 int `json:"3"`
-			Num4 int `json:"4"`
-			Num5 int `json:"5"`
-			T    int `json:"T"`
-		} `json:"score"`
-		Abbr string `json:"abbr"`
-		To   int    `json:"to"`
-	} `json:"away"`
-	Bp      int         `json:"bp"`
-	Down    int         `json:"down"`
-	Togo    int         `json:"togo"`
-	Clock   string      `json:"clock"`
-	Posteam string      `json:"posteam"`
-	Note    interface{} `json:"note"`
-	Redzone bool        `json:"redzone"`
-	Stadium string      `json:"stadium"`
-	Media   struct {
-		Radio struct {
-			Home interface{} `json:"home"`
-			Away interface{} `json:"away"`
-		} `json:"radio"`
-		Tv    string      `json:"tv"`
-		Sat   interface{} `json:"sat"`
-		Sathd interface{} `json:"sathd"`
-	} `json:"media"`
-	Yl  string  `json:"yl"`
-	Qtr *string `json:"qtr"`
+// scoreboard is the subset of ESPN's NFL scoreboard response that we use.
+type scoreboard struct {
+	Events []struct {
+		Date         string `json:"date"`
+		Competitions []struct {
+			Competitors []struct {
+				HomeAway string `json:"homeAway"`
+				Score    string `json:"score"`
+				Team     struct {
+					ID               string `json:"id"`
+					ShortDisplayName string `json:"shortDisplayName"`
+				} `json:"team"`
+			} `json:"competitors"`
+			Status struct {
+				Type struct {
+					State       string `json:"state"`
+					ShortDetail string `json:"shortDetail"`
+				} `json:"type"`
+			} `json:"status"`
+			Situation *struct {
+				DownDistanceText string `json:"downDistanceText"`
+				Possession       string `json:"possession"`
+			} `json:"situation"`
+			Broadcasts []struct {
+				Names []string `json:"names"`
+			} `json:"broadcasts"`
+		} `json:"competitions"`
+	} `json:"events"`
 }

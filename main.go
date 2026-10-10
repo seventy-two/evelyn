@@ -183,7 +183,7 @@ func main() {
 		nflAPI: &service.Service{
 			TargetURL: *app.String(cli.StringOpt{
 				Name:   "NFLURL",
-				Value:  "http://static.nfl.com/liveupdate/scores/scores.json",
+				Value:  "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard",
 				EnvVar: "NFL_API_URL",
 			}),
 		},

@@ -2,8 +2,9 @@ package nfl
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+	"time"
+	_ "time/tzdata" // kickoff times use Europe/London regardless of the host's zone data
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/ryanuber/columnize"
@@ -13,145 +14,75 @@ import (
 
 var serviceConfig *service.Service
 
+// kickoffZone is the time zone kickoff times are shown in.
+var kickoffZone, _ = time.LoadLocation("Europe/London")
+
 func nfl() ([]string, error) {
-	m := map[string]game{}
-	err := web.GetJSON(serviceConfig.TargetURL, &m)
-	if err != nil {
+	sb := &scoreboard{}
+	if err := web.GetJSON(serviceConfig.TargetURL, sb); err != nil {
 		return nil, err
 	}
+	return gameLines(sb), nil
+}
+
+// gameLines formats each game of the scoreboard as a pipe-separated row for
+// columnize: away score | away | @ | home | home score | status.
+func gameLines(sb *scoreboard) []string {
 	var out []string
-	for _, g := range m {
-		if g.Qtr == nil {
+	for _, e := range sb.Events {
+		if len(e.Competitions) == 0 {
 			continue
 		}
-		game := createGameString(&g)
-		if game != "" {
-			out = append(out, game)
-		}
-	}
-	return out, nil
+		c := e.Competitions[0]
 
+		var home, away, homeScore, awayScore, homeID string
+		for _, t := range c.Competitors {
+			if t.HomeAway == "home" {
+				home, homeScore, homeID = t.Team.ShortDisplayName, t.Score, t.Team.ID
+			} else {
+				away, awayScore = t.Team.ShortDisplayName, t.Score
+			}
+		}
+
+		var status string
+		switch c.Status.Type.State {
+		case "pre":
+			homeScore, awayScore = "", ""
+			status = kickoff(e.Date)
+			for _, b := range c.Broadcasts {
+				if len(b.Names) > 0 {
+					status += " " + b.Names[0]
+					break
+				}
+			}
+		case "in":
+			status = c.Status.Type.ShortDetail
+			if sit := c.Situation; sit != nil {
+				if sit.Possession == homeID {
+					home = ">" + home
+				} else if sit.Possession != "" {
+					away = ">" + away
+				}
+				if sit.DownDistanceText != "" {
+					status += " " + sit.DownDistanceText
+				}
+			}
+		default:
+			status = c.Status.Type.ShortDetail
+		}
+
+		out = append(out, strings.Join([]string{awayScore, away, "@", home, homeScore, status}, " | "))
+	}
+	return out
 }
 
-func createGameString(g *game) string {
-	home := getTeamName(g.Home.Abbr)
-	away := getTeamName(g.Away.Abbr)
-	homeScore := strconv.Itoa(g.Home.Score.T)
-	awayScore := strconv.Itoa(g.Away.Score.T)
-	down := ""
-	empty := ""
-	clock := ""
-
-	if *g.Qtr != "Pregame" && *g.Qtr != "Final" {
-		if g.Posteam == g.Home.Abbr {
-			home = ">" + home
-		} else {
-			away = ">" + away
-		}
-		switch g.Down {
-		case 1:
-			down = "1st & " + strconv.Itoa(g.Togo)
-		case 2:
-			down = "2nd & " + strconv.Itoa(g.Togo)
-		case 3:
-			down = "3rd & " + strconv.Itoa(g.Togo)
-		case 4:
-			down = "4th & " + strconv.Itoa(g.Togo)
-		}
-
-		if g.Yl != "" {
-			down = down + " at " + g.Yl
-		}
-		clock = g.Clock
-	} else if *g.Qtr == "Pregame" {
-		return ""
+// kickoff formats an ESPN date (e.g. "2026-10-11T17:00Z") as a UK kickoff time.
+func kickoff(date string) string {
+	t, err := time.Parse("2006-01-02T15:04Z07:00", date)
+	if err != nil {
+		return date
 	}
-
-	return awayScore + " | " + away + " | @ | " + home + "  | " + homeScore + empty + " | " + clock + getQuarter(*g.Qtr) + " " + down
-}
-
-func getQuarter(q string) string {
-	switch q {
-	case "1", "2", "3", "4":
-		return "Q" + q
-	case "final":
-		return "F"
-	case "final overtime":
-		return "F OT"
-	default:
-		return q
-	}
-}
-
-func getTeamName(team string) string {
-	switch team {
-	case "ARI":
-		return "Cardinals"
-	case "ATL":
-		return "Falcons"
-	case "CAR":
-		return "Panthers"
-	case "CHI":
-		return "Bears"
-	case "DAL":
-		return "Cowboys"
-	case "DET":
-		return "Lions"
-	case "GB":
-		return "Packers"
-	case "MIN":
-		return "Vikings"
-	case "NO":
-		return "Saints"
-	case "NYG":
-		return "Giants"
-	case "PHI":
-		return "Eagles"
-	case "LA", "LAR":
-		return "Rams"
-	case "SF":
-		return "49ers"
-	case "SEA":
-		return "Seahawks"
-	case "TB":
-		return "Buccaneers"
-	case "WAS":
-		return "Football Team"
-	case "BAL":
-		return "Ravens"
-	case "BUF":
-		return "Bills"
-	case "CIN":
-		return "Bengals"
-	case "CLE":
-		return "Browns"
-	case "DEN":
-		return "Broncos"
-	case "HOU":
-		return "Texans"
-	case "IND":
-		return "Colts"
-	case "JAC":
-		return "Jaguars"
-	case "KC":
-		return "Chiefs"
-	case "MIA":
-		return "Dolphins"
-	case "NE":
-		return "Patriots"
-	case "NYJ":
-		return "Jets"
-	case "LV", "LVR", "OAK":
-		return "Raiders"
-	case "PIT":
-		return "Steelers"
-	case "LAC":
-		return "Chargers"
-	case "TEN":
-		return "Titans"
-	default:
-		return team
-	}
+	return t.In(kickoffZone).Format("Mon 15:04")
 }
 
 func RegisterService(dg *discordgo.Session, config *service.Service) {
