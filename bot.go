@@ -36,12 +36,13 @@ func startedUp(s *discordgo.Session, event *discordgo.Ready) {
 	s.UpdateCustomStatus("Listening to ! prefix and /commands")
 }
 
-func start(app *cli.Cli, services *serviceConfig, dbPath string, logFile string, errorLog string) {
+func start(app *cli.Cli, services *serviceConfig, dbPath string, logFile string, messageLogFile string, errorLog string) {
 	dg, _ := discordgo.New(fmt.Sprintf("Bot %s", services.discordAPI.APIKey))
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	logger := createLogger(logFile)
 	go registerServices(dg, services, dbPath, logger)
 	dg.AddHandler(startedUp)
+	dg.AddHandler(createMessageLog(messageLogFile))
 	err := dg.Open()
 	if err != nil {
 		log.Fatalf("Error opening Discord session: %s", err)

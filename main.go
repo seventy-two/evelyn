@@ -290,6 +290,12 @@ func main() {
 		EnvVar: "LOG_PATH",
 	})
 
+	messageLogPath := *app.String(cli.StringOpt{
+		Name:   "MessageLogPath",
+		Value:  "/root/evelyn.messages.jsonl",
+		EnvVar: "MESSAGE_LOG_PATH",
+	})
+
 	errPath := *app.String(cli.StringOpt{
 		Name:   "ErrPath",
 		Value:  "/root/evelyn.err",
@@ -303,7 +309,7 @@ func main() {
 			Services.autotraderAPI.SearchURL = ""
 		}
 		Services.autotraderAPI.Interval = interval
-		start(app, Services, dbPath, logPath, errPath)
+		start(app, Services, dbPath, logPath, messageLogPath, errPath)
 	}
 
 	app.Run(os.Args)
