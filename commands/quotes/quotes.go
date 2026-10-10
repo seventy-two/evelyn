@@ -11,25 +11,10 @@ import (
 
 var serviceConfig *service.Service
 
-type quotesResult struct {
-	Success struct {
-		Total int `json:"total"`
-	} `json:"success"`
-	Contents struct {
-		Quotes []struct {
-			Quote      string      `json:"quote"`
-			Length     interface{} `json:"length"`
-			Author     string      `json:"author"`
-			Tags       []string    `json:"tags"`
-			Category   string      `json:"category"`
-			Date       string      `json:"date"`
-			Permalink  string      `json:"permalink"`
-			Title      string      `json:"title"`
-			Background string      `json:"background"`
-			ID         string      `json:"id"`
-		} `json:"quotes"`
-		Copyright string `json:"copyright"`
-	} `json:"contents"`
+// zenQuote is one quote from the ZenQuotes API, which returns a list.
+type zenQuote struct {
+	Quote  string `json:"q"`
+	Author string `json:"a"`
 }
 
 type quote struct {
@@ -38,21 +23,18 @@ type quote struct {
 }
 
 func getQuoteOfTheDay() (*quote, error) {
-	results := &quotesResult{}
-	err := web.GetJSON(serviceConfig.TargetURL, results)
+	var results []zenQuote
+	err := web.GetJSON(serviceConfig.TargetURL, &results)
 	if err != nil {
 		return nil, err
 	}
-	if results.Success.Total < 1 {
+	if len(results) == 0 || results[0].Quote == "" {
 		return nil, fmt.Errorf("no quote today")
 	}
-	for _, q := range results.Contents.Quotes {
-		return &quote{
-			quote:  q.Quote,
-			author: q.Author,
-		}, nil
-	}
-	return nil, nil
+	return &quote{
+		quote:  results[0].Quote,
+		author: results[0].Author,
+	}, nil
 }
 
 // RegisterService registers the quotes service
@@ -77,6 +59,8 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 			Title:       q.author,
 			Description: q.quote,
+			// ZenQuotes' free tier asks for attribution.
+			Footer: &discordgo.MessageEmbedFooter{Text: "Quotes provided by ZenQuotes.io"},
 		})
 	}
 }

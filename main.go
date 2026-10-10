@@ -215,7 +215,7 @@ func main() {
 		quotesAPI: &service.Service{
 			TargetURL: *app.String(cli.StringOpt{
 				Name:   "QuotesAPIURL",
-				Value:  "http://quotes.rest/qod.json",
+				Value:  "https://zenquotes.io/api/today",
 				EnvVar: "QUOTES_API_URL",
 			}),
 		},

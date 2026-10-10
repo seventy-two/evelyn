@@ -1,112 +1,103 @@
 # evelyn
-A simple discord assistant
 
-Prefixes are currently hardcoded with trigger `!`
+A Discord assistant bot. Every command works with the `!` prefix or as a
+slash command (`!w london` or `/w location:london`). `!help` lists them in
+Discord.
 
-
-#### APIs that require keys
-
-* [Google Geocode](https://developers.google.com/maps/documentation/geocoding/intro): [commands/weather](commands/weather/weather.go)
-* [Forecast.io](https://developer.forecast.io/docs/v2): [commands/weather](commands/weather/weather.go)
-* [Wolfram Alpha](http://products.wolframalpha.com/api/): [commands/wolfram](commands/wolfram/wolfram.go)
-* [Youtube](https://developers.google.com/youtube/v3/): [commands/youtube](commands/youtube/youtube.go)
-* [Omdb](http://omdbapi.com/): [commands/omdb](commands/omdb/omdb.go)
-* [Wordnik](http://api.wordnik.com): [commands/dictionary](commands/dictionary/dictionary.go)
-
-***
-
-### Functions
-
-- [evelyn](#evelyn)
-			- [APIs that require keys](#apis-that-require-keys)
-		- [Functions](#functions)
-		- [Dictionary](#dictionary)
-		- [Omdb](#omdb)
-	- [Stocks](#stocks)
-		- [TVMaze](#tvmaze)
-		- [Urban Dictionary](#urban-dictionary)
-		- [Weather](#weather)
-		- [WolframAlpha](#wolframalpha)
-		- [NFL](#nfl)
-***
-
-
-### Dictionary 
-Returns the word of the day from Wordnik
-
-**!word/!wotd**
-
-Returns the Wordnik dictionary results (up to 3) for the given query
-
-**!dict** *search query*
-
-
-### Omdb
-Returns tags, imdb + rt ratings, and short descriptions of the given query
-
-**!m** *search query* 
-
-## Stocks
-Returns the current ask price, and the current change in % and USD from the NYSE of the given query. Query format must be a NYSE Symbol.
-
-**!stocks** *Query*
-
-**!wl/!watchlist**
-Returns stock prices of your watchlist
-**!wl add** *Stock*
-Adds stock to your watchlist
-**!wl remove** *Symbol*
-Removes the stock represented by the symbol from your watchlist
-
-### TVMaze
-Info for *tv show* with episode airtime if available **-tv** *tv show*
-
-	-tv Better call saul
-	TVmaze | Better Call Saul | Airtime: Monday 22:00 on AMC | Status: Running | Next Ep: S2E6 at 22:00 2016-03-21
-	
-	-tv Mr Robot
-	TVmaze | Mr. Robot | Airtime: Wednesday 22:00 on USA Network | Status: Running
-
-
-
-### Urban Dictionary
-Gets the first definition of *query* at [UrbanDictionary](http://www.urbandictionary.com/)
-
-**!ud** *query*
-
-	.urban 4chan
-	Urban Dictionary | 4chan | http://mnn.im/upucr | you have just entered the very heart, soul, and life force of the internet. this is a place beyond sanity, wild and untamed. there is nothing new here. "new" content on 4chan is not found; it is created from old material. every interesting, offensive, shoc…
-
-
+## Commands
 
 ### Weather
-[Yahoo Weather](http://weather.yahoo.com/) for *location*
-**!w** *location*
 
-	.weather Washington, DC
-	Weather | Washington | Cloudy 15°C. Wind chill: 15°C. Humidity: 72%
+| Command | |
+| --- | --- |
+| `!w [location]` | Current weather. Uses your saved location if you leave it out. |
+| `!f [location]` | Forecast. Uses your saved location if you leave it out. |
+| `!set location <location>` | Save your default location. |
 
-[Yahoo Weather Forecast](http://weather.yahoo.com/) for *location*
-**!f** *location*
+Locations are looked up with Google Geocoding and weather comes from
+[Pirate Weather](https://pirateweather.net/).
 
-	.forecast Washington, DC
-	Forecast | Washington | Sun: Clouds Early/Clearing Late 16°C/10°C | Mon: Mostly Sunny 19°C/8°C | Tue: Mostly Sunny 23°C/11°C | Wed: Partly Cloudy 24°C/11°C
-	
-**!set location** *Location*
-	Stores your location to be used for weather or forecasts
+### Words
 
-### WolframAlpha
-Finds the answer of *question* using [WolfarmAlpha](http://www.wolframalpha.com/)
+| Command | |
+| --- | --- |
+| `!dict <word>` | Definitions (up to 3), from [Wordnik](https://developer.wordnik.com/). |
+| `!syn <word>` | Synonyms, from Wordnik. |
+| `!wotd` | Wordnik's word of the day. |
+| `!ud <term>` | Top definition from [Urban Dictionary](https://www.urbandictionary.com/). |
 
-**!wa** *question*
+### Movies and TV
 
-	.wa time in Bosnia
-	Wolfram | current time in Bosnia and Herzegovina >>> 12:55:38 pm CEST | Tuesday, October 6, 2015
+| Command | |
+| --- | --- |
+| `!m <title> [(year)]` | Plot, ratings and poster from [OMDb](https://www.omdbapi.com/), e.g. `!m heat (1995)`. |
+| `!tv <show>` | Show info, airtime and next episode from [TVmaze](https://www.tvmaze.com/api). |
 
+### Stocks
 
-### NFL
-Returns recent scores
+Stock commands only work in the stocks channels.
 
-**!nfl**  
+| Command | |
+| --- | --- |
+| `!q <stock>` | Quick quote, by symbol or company name. |
+| `!quote <stock>` | Detailed quote. |
+| `!wl` / `!watchlist` | Your watchlist. `!wl add <stock>`, `!wl del <symbol>`, `!wl help`. |
+| `!earnings [text]` | Show the earnings note, or replace it with `text`. |
+| `!ex <from> <to>` | Currency exchange rate, e.g. `!ex GBP USD`. |
+| `!nasdaq`, `!sp` / `!s&p`, `!dow` | Top and bottom movers for the NASDAQ 100, S&P 500 or Dow 30. |
 
-***
+Quotes and movers come from CNBC, symbol search and exchange rates from
+[Alpha Vantage](https://www.alphavantage.co/), and logos from
+[logo.dev](https://www.logo.dev/).
+
+### Other
+
+| Command | |
+| --- | --- |
+| `!wa <question>` | Answer from [Wolfram Alpha](https://products.wolframalpha.com/api/). |
+| `!nfl` | This week's NFL scores and upcoming games, from ESPN. |
+| `!beer <name>` | Beer details from [Untappd](https://untappd.com/api/docs). |
+| `!qotd` | Quote of the day from [ZenQuotes](https://zenquotes.io/). |
+| `!help` | List commands. |
+
+## Passive features
+
+These run without a command:
+
+- **AI chat** (main server only): mention the bot to chat with Google Gemini.
+  It can see images in or replied to by your message. `!reset` clears the
+  chat history.
+- **YouTube summaries** (main server only): posts a summary of linked YouTube
+  videos up to 20 minutes long, or any length if you mention the bot.
+- **Voice note summaries** (main server only): summarises `.ogg` voice notes.
+- **Vertical media "fix"**: reposts tall images stretched to landscape
+  (occasionally deep-fried) and tall videos rotated 90°.
+
+## Running
+
+```sh
+go build -o evelyn .
+./evelyn --help   # lists every option and its environment variable
+```
+
+All configuration is through environment variables. The bot needs:
+
+| Variable | For |
+| --- | --- |
+| `EVELYN_DISCORD_API_KEY` | Discord bot token |
+| `GEOCODE_API_KEY` | Google Geocoding (weather) |
+| `WEATHER_API_KEY` | Pirate Weather |
+| `WORDNIK_API_KEY` | Wordnik (dictionary) |
+| `MOVIE_API_KEY` | OMDb |
+| `MATH_API_KEY` | Wolfram Alpha app ID |
+| `STOCKS_QUOTE_KEY` | Alpha Vantage |
+| `STOCKS_LOGO_API_KEY` | logo.dev |
+| `BEER_API_KEY` | Untappd credentials query string (`client_id=…&client_secret=…&access_token=…`) |
+| `GENERATION_API_KEY` | Google Gemini |
+| `GENERATION_YOUTUBE_API_KEY` | YouTube Data API (video length) |
+
+TVmaze, Urban Dictionary, ESPN, CNBC and ZenQuotes need no key. Data is stored
+in a Badger database at `DB_PATH` (default `/root/evelynDB`). Messages are
+logged to `LOG_PATH` and errors to `ERR_PATH`.
+
+Slash commands are registered with Discord each time the bot starts.
