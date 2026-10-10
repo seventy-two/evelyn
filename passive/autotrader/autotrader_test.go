@@ -31,7 +31,7 @@ func TestParseSearch(t *testing.T) {
 		{Filter: "min_year_manufactured", Selected: []string{"2021"}},
 	}, s.filters)
 
-	_, err = parseSearch("https://www.autotrader.co.uk/car-search?postcode=BS1")
+	_, err = parseSearch("https://www.autotrader.co.uk/car-search?postcode=SW1A")
 	assert.Error(t, err, "a search needs a make")
 }
 
