@@ -70,13 +70,61 @@ func synonym(matches []string) (msg string, err error) {
 	return out, nil
 }
 
-func wotd() (msg string, err error) {
+func wotd() (*discordgo.MessageEmbed, error) {
 	data := &wotdResponse{}
-	err = web.GetJSON(fmt.Sprintf(serviceConfig.WOTDURL, serviceConfig.WordnikAPIKey), data)
+	err := web.GetJSON(fmt.Sprintf(serviceConfig.WOTDURL, serviceConfig.WordnikAPIKey), data)
 	if err != nil {
-		return fmt.Sprintf("There was a problem with your request."), nil
+		return nil, err
 	}
-	return fmt.Sprintf("Word of the day: %s\n%s - %s", data.Word, data.Note, data.Definitions[0].Text), nil // I really hate doing [0] but we only want one definition. I hate comments that cause horizontal scroll also.
+	if data.Word == "" {
+		return nil, fmt.Errorf("no word of the day")
+	}
+	return wotdEmbed(data), nil
+}
+
+// wotdEmbed formats the word of the day as a card: up to three definitions,
+// an example sentence and the note on the word's origin.
+func wotdEmbed(data *wotdResponse) *discordgo.MessageEmbed {
+	var defs []string
+	for i, d := range data.Definitions {
+		if i == 3 {
+			break
+		}
+		def := d.Text
+		if d.PartOfSpeech != "" {
+			def = fmt.Sprintf("*%s* %s", d.PartOfSpeech, def)
+		}
+		defs = append(defs, fmt.Sprintf("%d. %s", i+1, def))
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Author:      &discordgo.MessageEmbedAuthor{Name: "Word of the day"},
+		Title:       data.Word,
+		URL:         "https://www.wordnik.com/words/" + url.PathEscape(data.Word),
+		Description: truncate(strings.Join(defs, "\n"), 4096),
+		Color:       0x5865F2,
+	}
+	if len(data.Examples) > 0 {
+		ex := data.Examples[0]
+		text := fmt.Sprintf("> %s", ex.Text)
+		if ex.Title != "" {
+			text += fmt.Sprintf("\n— *%s*", ex.Title)
+		}
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{Name: "Example", Value: truncate(text, 1024)})
+	}
+	if data.Note != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{Name: "Origin", Value: truncate(data.Note, 1024)})
+	}
+	return embed
+}
+
+// truncate shortens s to at most n characters, ending with an ellipsis if cut.
+func truncate(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n-1]) + "…"
 }
 
 func RegisterService(dg *discordgo.Session, config *Service) {
@@ -98,7 +146,13 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "!syn":
 		str, err = synonym(matches[1:])
 	case "!wotd":
-		str, err = wotd()
+		embed, err := wotd()
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("```an error occured (%s)```", err))
+			return
+		}
+		s.ChannelMessageSendEmbed(m.ChannelID, embed)
+		return
 	}
 
 	if err != nil {
