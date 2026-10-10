@@ -1,6 +1,6 @@
 module github.com/seventy-two/evelyn
 
-go 1.23.0
+go 1.24
 
 toolchain go1.24.0
 
@@ -13,7 +13,7 @@ require (
 	github.com/seventy-two/Cara v0.0.0-20160914220715-4d6a1d2c169e
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/genai v1.16.0
+	google.golang.org/genai v1.73.0
 	gopkg.in/xmlpath.v2 v2.0.0-20150820204837-860cbeca3ebc
 )
 
@@ -46,7 +46,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/image v0.25.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect

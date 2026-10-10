@@ -55,7 +55,7 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if img != nil {
-		_, err := s.ChannelFileSendWithMessage(m.ChannelID, "It looks like you posted vertical content :( I've fixed it for you!", fmt.Sprintf(img.Name), img.Reader)
+		_, err := s.ChannelFileSendWithMessage(m.ChannelID, "It looks like you posted vertical content :( I've fixed it for you!", img.Name, img.Reader)
 		if err != nil {
 			fmt.Println(err)
 		}

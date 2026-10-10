@@ -63,6 +63,10 @@ type Youtube struct {
 }
 
 func (y *Youtube) GetDuration() time.Duration {
+	if len(y.Items) == 0 {
+		// Private, deleted or unavailable video.
+		return 0
+	}
 	d, err := time.ParseDuration(strings.ToLower(strings.TrimPrefix(y.Items[0].ContentDetails.Duration, "PT")))
 	if err != nil {
 		fmt.Println(err)
