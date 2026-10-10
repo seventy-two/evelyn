@@ -1,0 +1,6 @@
+# Built binary
+/evelyn
+
+# Runtime logs
+*.log
+*.err
