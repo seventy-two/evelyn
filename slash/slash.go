@@ -154,9 +154,15 @@ func (r *Router) handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		user = i.Member.User
 	}
 
-	// Acknowledge straight away (Discord requires a reply within 3 seconds);
-	// the command's own output follows as normal channel messages.
-	r.respond(s, i, fmt.Sprintf("`%s`", strings.ReplaceAll(text, "`", "'")), false)
+	// Discord requires a reply within 3 seconds, so show "thinking" while the
+	// command runs; its first message then replaces that.
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+	if err != nil {
+		log.Errorf("deferring /%s: %s", c.Name, err)
+		return
+	}
 
 	m := &discordgo.MessageCreate{Message: &discordgo.Message{
 		ID:        i.ID,
@@ -169,7 +175,18 @@ func (r *Router) handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if r.logger != nil {
 		r.logger(s, m)
 	}
-	c.Handler(s, m)
+
+	reply := newReplySession(s, i.Interaction)
+	c.Handler(reply.session, m)
+
+	// Some commands send their first message from a goroutine, so give them
+	// a moment before giving up on output.
+	if !reply.finish(10 * time.Second) {
+		content := "Done."
+		if _, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &content}); err != nil {
+			log.Errorf("finishing /%s: %s", c.Name, err)
+		}
+	}
 }
 
 func (r *Router) respond(s *discordgo.Session, i *discordgo.InteractionCreate, content string, ephemeral bool) {
