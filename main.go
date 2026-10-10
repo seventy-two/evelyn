@@ -4,15 +4,10 @@ import (
 	"os"
 
 	"github.com/seventy-two/evelyn/commands/dictionary"
-	"github.com/seventy-two/evelyn/commands/olympics"
-	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/stocks"
-	"github.com/seventy-two/evelyn/commands/wc"
 	"github.com/seventy-two/evelyn/commands/weather"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/service"
-
-	"github.com/seventy-two/evelyn/commands/dota"
 
 	cli "github.com/jawher/mow.cli"
 )
@@ -24,7 +19,6 @@ type appLink struct {
 
 type serviceConfig struct {
 	discordAPI    *service.Service
-	dotaAPI       *dota.Service
 	weatherAPI    *weather.Service
 	divegrassAPI  *service.Service
 	dictionaryAPI *dictionary.Service
@@ -34,13 +28,10 @@ type serviceConfig struct {
 	urbanAPI      *service.Service
 	nflAPI        *service.Service
 	stocksAPI     *stocks.Service
-	siegeAPI      *siege.Service
 	beerAPI       *service.Service
 	quotesAPI     *service.Service
 	bingAPI       *service.Service
-	olympicsAPI   *olympics.Service
 	generationAPI *generation.Service
-	wcAPI         *wc.Service
 }
 
 var appMeta = struct {
@@ -69,33 +60,6 @@ func main() {
 				Name:   "EvelynDiscordAPIKey",
 				Value:  "",
 				EnvVar: "EVELYN_DISCORD_API_KEY",
-			}),
-		},
-		dotaAPI: &dota.Service{
-			APIKey: *app.String(cli.StringOpt{
-				Name:   "DotaAPIKey",
-				Value:  "",
-				EnvVar: "DOTA_API_KEY",
-			}),
-			DotaLeagueURL: *app.String(cli.StringOpt{
-				Name:   "DotaLeagueURL",
-				Value:  "http://api.steampowered.com/IDOTA2Match_570/GetLiveLeagueGames/v1/?key=%s",
-				EnvVar: "DOTA_LEAGUE_URL",
-			}),
-			DotaListingURL: *app.String(cli.StringOpt{
-				Name:   "DotaListingURL",
-				Value:  "http://www.dota2.com/webapi/IDOTA2League/GetLeagueInfoList/v001",
-				EnvVar: "DOTA_LISTING_URL",
-			}),
-			DotaMatchURL: *app.String(cli.StringOpt{
-				Name:   "DotaMatchURL",
-				Value:  "http://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/?key=%s",
-				EnvVar: "DOTA_MATCH_URL",
-			}),
-			DotaHeroesURL: *app.String(cli.StringOpt{
-				Name:   "DotaHeroesURL",
-				Value:  "http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/?language=en_gb&key=%s",
-				EnvVar: "DOTA_HEROES_URL",
 			}),
 		},
 		weatherAPI: &weather.Service{
@@ -229,38 +193,6 @@ func main() {
 				EnvVar: "STOCKS_LOGO_API_KEY",
 			}),
 		},
-		siegeAPI: &siege.Service{
-			AuthURL: *app.String(cli.StringOpt{
-				Name:   "SiegeAuthURL",
-				Value:  "https://public-ubiservices.ubi.com/v3/profiles/sessions",
-				EnvVar: "SIEGE_AUTH_URL",
-			}),
-			AuthUser: *app.String(cli.StringOpt{
-				Name:   "SiegeAuthUser",
-				Value:  "",
-				EnvVar: "SIEGE_AUTH_USER",
-			}),
-			AuthPassword: *app.String(cli.StringOpt{
-				Name:   "SiegeAuthPassword",
-				Value:  "",
-				EnvVar: "SIEGE_AUTH_PASSWORD",
-			}),
-			ProfileURL: *app.String(cli.StringOpt{
-				Name:   "SiegeProfileURL",
-				Value:  "https://public-ubiservices.ubi.com/v2/profiles?platformType=uplay&nameOnPlatform=%s",
-				EnvVar: "SIEGE_PROFILE_URL",
-			}),
-			LevelURL: *app.String(cli.StringOpt{
-				Name:   "SiegeLevelURL",
-				Value:  "https://public-ubiservices.ubi.com/v1/spaces/5172a557-50b5-4665-b7db-e3f2e8c5041d/sandboxes/OSBOR_PC_LNCH_A/r6playerprofile/playerprofile/progressions?profile_ids=%s",
-				EnvVar: "SIEGE_LEVEL_URL",
-			}),
-			RankURL: *app.String(cli.StringOpt{
-				Name:   "SiegeRankURL",
-				Value:  "https://public-ubiservices.ubi.com/v1/spaces/5172a557-50b5-4665-b7db-e3f2e8c5041d/sandboxes/OSBOR_PC_LNCH_A/r6karma/players?board_id=pvp_ranked&region_id=emea&season_id=-1&profile_ids=%s",
-				EnvVar: "SIEGE_RANK_URL",
-			}),
-		},
 		urbanAPI: &service.Service{
 			TargetURL: *app.String(cli.StringOpt{
 				Name:   "UrbanAPIURL",
@@ -299,23 +231,6 @@ func main() {
 				EnvVar: "BING_API_URL",
 			}),
 		},
-		olympicsAPI: &olympics.Service{
-			MedalURL: *app.String(cli.StringOpt{
-				Name:   "OlympicsAPIURL",
-				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/medal-table.json",
-				EnvVar: "OLYMPICS_API_URL",
-			}),
-			EventURL: *app.String(cli.StringOpt{
-				Name:   "EventAPIURL",
-				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/medal-list.json",
-				EnvVar: "EVENT_API_URL",
-			}),
-			ScheduleURL: *app.String(cli.StringOpt{
-				Name:   "ScheduleAPIURL",
-				Value:  "https://cf.eip.telegraph.co.uk/data/bespoke-olympics-2024/daily-schedule.json",
-				EnvVar: "SCHEDULE_API_URL",
-			}),
-		},
 		generationAPI: &generation.Service{
 			APIKey: *app.String(cli.StringOpt{
 				Name:   "GenerationAPIKey",
@@ -331,13 +246,6 @@ func main() {
 				Name:   "GenerationYoutubeAPIKey",
 				Value:  "",
 				EnvVar: "GENERATION_YOUTUBE_API_KEY",
-			}),
-		},
-		wcAPI: &wc.Service{
-			TargetURL: *app.String(cli.StringOpt{
-				Name:   "WCURL",
-				Value:  "https://web-cdn.api.bbci.co.uk/wc-poll-data/container/sport-data-scores-fixtures?selectedEndDate=%s&selectedStartDate=%s&todayDate=%s&urn=urn%%3Abbc%%3Asportsdata%%3Afootball%%3Atournament%%3Aworld-cup",
-				EnvVar: "WC_URL",
 			}),
 		},
 	}

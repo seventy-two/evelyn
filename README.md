@@ -10,7 +10,6 @@ Prefixes are currently hardcoded with trigger `!`
 * [Forecast.io](https://developer.forecast.io/docs/v2): [commands/weather](commands/weather/weather.go)
 * [Wolfram Alpha](http://products.wolframalpha.com/api/): [commands/wolfram](commands/wolfram/wolfram.go)
 * [Youtube](https://developers.google.com/youtube/v3/): [commands/youtube](commands/youtube/youtube.go)
-* [Dota2](https://steamcommunity.com/dev/apikey): [commands/dota](commands/dota/dota.go)
 * [Omdb](http://omdbapi.com/): [commands/omdb](commands/omdb/omdb.go)
 * [Wordnik](http://api.wordnik.com): [commands/dictionary](commands/dictionary/dictionary.go)
 
@@ -22,7 +21,6 @@ Prefixes are currently hardcoded with trigger `!`
 			- [APIs that require keys](#apis-that-require-keys)
 		- [Functions](#functions)
 		- [Dictionary](#dictionary)
-	- [DotA2](#dota2)
 		- [Omdb](#omdb)
 	- [Stocks](#stocks)
 		- [TVMaze](#tvmaze)
@@ -41,24 +39,6 @@ Returns the word of the day from Wordnik
 Returns the Wordnik dictionary results (up to 3) for the given query
 
 **!dict** *search query*
-
-
-## DotA2 
-Returns information on the current games being played. For tier 3 (Premium) games, games with more than 200 viewers are returned. For tier 2 (Professional) games, games with more than 1000 viewers are returned.
-
-**!d2/dota**
-
-Returns heroes picked, along with the above
-
-**!d2h** 
-
-Returns scores along with the game data
-
-**!d2s**
-
-Returns all information 
-
-**!d2hs**
 
 
 ### Omdb

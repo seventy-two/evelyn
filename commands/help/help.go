@@ -33,17 +33,7 @@ Commands
 !dow                     DOW 30 top movers
 
 !nfl                     NFL scores
-!d2 [h]                  Dota 2 live league games (add h for heroes)
-!r6 <username>           Rainbow Six Siege player stats
 !beer <name>             Beer search
-
-!medals                  Olympic medal table
-!events                  Olympic events
-!schedule                Olympic schedule
-
-!wc                      World Cup scores / fixtures
-!wc fixtures             Upcoming WC fixtures (next 7 days)
-!wc watch on/off         Live WC score updates
 
 !qotd                    Quote of the day
 !reset                   Reset AI chat history

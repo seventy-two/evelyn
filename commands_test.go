@@ -6,18 +6,14 @@ import (
 
 	"github.com/seventy-two/evelyn/commands/beer"
 	"github.com/seventy-two/evelyn/commands/dictionary"
-	"github.com/seventy-two/evelyn/commands/dota"
 	"github.com/seventy-two/evelyn/commands/help"
 	"github.com/seventy-two/evelyn/commands/math"
 	"github.com/seventy-two/evelyn/commands/movie"
 	"github.com/seventy-two/evelyn/commands/nfl"
-	"github.com/seventy-two/evelyn/commands/olympics"
 	"github.com/seventy-two/evelyn/commands/quotes"
-	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/commands/tv"
 	"github.com/seventy-two/evelyn/commands/urbandictionary"
-	"github.com/seventy-two/evelyn/commands/wc"
 	"github.com/seventy-two/evelyn/commands/weather"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/slash"
@@ -29,10 +25,10 @@ func TestSlashCommandsValid(t *testing.T) {
 	name := regexp.MustCompile(`^[-_a-z0-9]{1,32}$`)
 	var all []*slash.Command
 	for _, cmds := range [][]*slash.Command{
-		beer.SlashCommands(), dictionary.SlashCommands(), dota.SlashCommands(), help.SlashCommands(),
-		math.SlashCommands(), movie.SlashCommands(), nfl.SlashCommands(), olympics.SlashCommands(),
-		quotes.SlashCommands(), siege.SlashCommands(), stocks.SlashCommands(), tv.SlashCommands(),
-		urbandictionary.SlashCommands(), wc.SlashCommands(), weather.SlashCommands(), generation.SlashCommands(),
+		beer.SlashCommands(), dictionary.SlashCommands(), help.SlashCommands(),
+		math.SlashCommands(), movie.SlashCommands(), nfl.SlashCommands(),
+		quotes.SlashCommands(), stocks.SlashCommands(), tv.SlashCommands(),
+		urbandictionary.SlashCommands(), weather.SlashCommands(), generation.SlashCommands(),
 	} {
 		all = append(all, cmds...)
 	}

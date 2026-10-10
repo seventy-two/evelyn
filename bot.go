@@ -11,9 +11,7 @@ import (
 	"github.com/seventy-two/evelyn/commands/beer"
 	"github.com/seventy-two/evelyn/commands/bing"
 	"github.com/seventy-two/evelyn/commands/help"
-	"github.com/seventy-two/evelyn/commands/olympics"
 	"github.com/seventy-two/evelyn/commands/stocks"
-	"github.com/seventy-two/evelyn/commands/wc"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/passive/images"
 	"github.com/seventy-two/evelyn/passive/shitpost"
@@ -24,12 +22,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 	cli "github.com/jawher/mow.cli"
 	"github.com/seventy-two/evelyn/commands/dictionary"
-	"github.com/seventy-two/evelyn/commands/dota"
 	"github.com/seventy-two/evelyn/commands/math"
 	"github.com/seventy-two/evelyn/commands/movie"
 	"github.com/seventy-two/evelyn/commands/nfl"
 	"github.com/seventy-two/evelyn/commands/quotes"
-	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/tv"
 	"github.com/seventy-two/evelyn/commands/urbandictionary"
 	"github.com/seventy-two/evelyn/commands/weather"
@@ -75,10 +71,6 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 		dictionary.RegisterService(dg, services.dictionaryAPI)
 		router.Add(dictionary.SlashCommands()...)
 	}
-	if services.dotaAPI != nil {
-		dota.RegisterService(dg, services.dotaAPI)
-		router.Add(dota.SlashCommands()...)
-	}
 	if services.nflAPI != nil {
 		nfl.RegisterService(dg, services.nflAPI)
 		router.Add(nfl.SlashCommands()...)
@@ -109,10 +101,6 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 		math.RegisterService(dg, services.mathAPI)
 		router.Add(math.SlashCommands()...)
 	}
-	if services.siegeAPI != nil {
-		siege.RegisterService(dg, services.siegeAPI)
-		router.Add(siege.SlashCommands()...)
-	}
 	if services.beerAPI != nil {
 		beer.RegisterService(dg, services.beerAPI)
 		router.Add(beer.SlashCommands()...)
@@ -123,14 +111,6 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	}
 	if services.bingAPI != nil {
 		bing.RegisterService(dg, services.bingAPI)
-	}
-	if services.olympicsAPI != nil {
-		olympics.RegisterService(dg, services.olympicsAPI)
-		router.Add(olympics.SlashCommands()...)
-	}
-	if services.wcAPI != nil {
-		wc.RegisterService(dg, services.wcAPI)
-		router.Add(wc.SlashCommands()...)
 	}
 	if services.generationAPI != nil {
 		generation.RegisterService(dg, services.generationAPI)
