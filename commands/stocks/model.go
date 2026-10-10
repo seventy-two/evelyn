@@ -142,3 +142,47 @@ type CNBCStock struct {
 		} `json:"FormattedQuote"`
 	} `json:"FormattedQuoteResult"`
 }
+
+type Movers struct {
+	GroupName        string `json:"groupName"`
+	Count            int    `json:"count"`
+	RankProperty     string `json:"rankProperty"`
+	RankOrder        string `json:"rankOrder"`
+	FilterProperty   string `json:"filterProperty"`
+	FilterOperator   string `json:"filterOperator"`
+	FilterValue      string `json:"filterValue"`
+	RankingTime      int    `json:"rankingTime"`
+	Source           string `json:"source"`
+	IndexImpact      bool   `json:"indexImpact"`
+	RankedSymbolList []struct {
+		RankOrder     string `json:"rankOrder"`
+		RankedSymbols []struct {
+			IssueID    int    `json:"issueId"`
+			CnbcSymbol string `json:"cnbcSymbol"`
+			SymbolDesc string `json:"symbolDesc"`
+			SymbolData struct {
+				LastPrice         float64 `json:"lastPrice"`
+				Change            float64 `json:"change"`
+				ChangePct         float64 `json:"changePct"`
+				ChangeAfter       float64 `json:"changeAfter"`
+				ChangePre         float64 `json:"changePre"`
+				ChangePctAfter    float64 `json:"changePctAfter"`
+				ChangePctPre      float64 `json:"changePctPre"`
+				PrevClosePrice    float64 `json:"prevClosePrice"`
+				Volume            int     `json:"volume"`
+				YearhHighInd      int     `json:"yearhHighInd"`
+				YearhLowInd       int     `json:"yearhLowInd"`
+				ImpliedVolatality float64 `json:"impliedVolatality"`
+				PctTenDayVol      float64 `json:"pctTenDayVol"`
+				PeRatio           float64 `json:"peRatio"`
+				Yield             float64 `json:"yield"`
+				TradingStatus     int     `json:"tradingStatus"`
+				LastTime          string  `json:"lastTime"`
+				Vendor            string  `json:"vendor"`
+				LastPriceFmt      string  `json:"lastPriceFmt"`
+				ChangeFmt         string  `json:"changeFmt"`
+				ChangePctFmt      string  `json:"changePctFmt"`
+			} `json:"symbolData"`
+		} `json:"rankedSymbols"`
+	} `json:"rankedSymbolList"`
+}

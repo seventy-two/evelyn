@@ -2,6 +2,7 @@ package stocks
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -27,7 +28,32 @@ func (w *WatchlistStorage) addStockToWatchlistForUser(id string, s string) error
 }
 
 func (w *WatchlistStorage) removeStockFromWatchlistForUser(id string, s string) error {
-	if err := w.Db.RemoveCuntInfo(id, &database.CuntInfo{Watchlist: []string{s}}); err != nil {
+	watchlist, err := w.retrieveWatchlistForUser(id)
+	if err != nil {
+		return err
+	}
+
+	symbol := ""
+	for _, entry := range watchlist {
+		if entry == s {
+			symbol = entry
+			break
+		}
+	}
+	if symbol == "" {
+		upper := strings.ToUpper(s)
+		for _, entry := range watchlist {
+			if entry == upper {
+				symbol = entry
+				break
+			}
+		}
+	}
+	if symbol == "" {
+		return fmt.Errorf("%s is not on your watchlist", s)
+	}
+
+	if err := w.Db.RemoveCuntInfo(id, &database.CuntInfo{Watchlist: []string{symbol}}); err != nil {
 		return err
 	}
 	return nil
@@ -46,25 +72,35 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 		return
 	}
 	matches := strings.Split(m.Content, " ")
-	if len(matches) > 1 && matches[1] == "add" {
-		stock, err := lookupAndGetStock(strings.Join(matches[2:], "+"))
-		if stock == nil || err != nil {
-			s.ChannelMessageSend(m.ChannelID, "Could not add stock to watchlist as stock could not be found")
+	if len(matches) > 1 {
+		switch matches[1] {
+		case "add":
+			s.ChannelTyping(m.ChannelID)
+			stock, err := lookupAndGetStock(strings.Join(matches[2:], "+"))
+			if stock == nil || err != nil {
+				s.ChannelMessageSend(m.ChannelID, "Could not add stock to watchlist as stock could not be found")
+				return
+			}
+			if err := w.addStockToWatchlistForUser(m.Author.ID, stock.symbol); err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+				return
+			}
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("added %s to your watchlist", stock.symbol))
+			return
+		case "remove", "del":
+			s.ChannelTyping(m.ChannelID)
+			if err := w.removeStockFromWatchlistForUser(m.Author.ID, strings.Join(matches[2:], "+")); err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+				return
+			}
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("removed %s from your watchlist", strings.Join(matches[2:], "+")))
+			return
+		case "help":
+			s.ChannelMessageSend(m.ChannelID, "usage: !wl add/del <stock name> - adds or removes a stock from your watchlist\n!wl - shows the stocks in your watchlist")
 			return
 		}
-		if err := w.addStockToWatchlistForUser(m.Author.ID, stock.symbol); err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			return
-		}
-		return
 	}
-	if len(matches) > 1 && matches[1] == "remove" {
-		if err := w.removeStockFromWatchlistForUser(m.Author.ID, strings.Join(matches[2:], "+")); err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			return
-		}
-		return
-	}
+
 	s.ChannelTyping(m.ChannelID)
 
 	queries, err := w.retrieveWatchlistForUser(m.Author.ID)
@@ -81,7 +117,7 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 		return
 	}
 
-	if len(stocks) > 20 {
+	if len(stocks) > 30 {
 		s.ChannelMessageSend(m.ChannelID, "your watchlist is too large, consider deleting some entries :)")
 		return
 	}
@@ -107,5 +143,29 @@ func createWatchlistOutput(stocks []*stock) string {
 		return ""
 	}
 
-	return fmt.Sprintf("```%s```", columnize.SimpleFormat(lines))
+	c := columnize.SimpleFormat(lines)
+
+	return addAnsiColours(c)
+}
+
+var (
+	redRe   = regexp.MustCompile(`-[\d.]+%?`)
+	greenRe = regexp.MustCompile(`\+[\d.]+%?`)
+)
+
+func addAnsiColours(s string) string {
+	c := "```ansi\n%s```"
+	lines := strings.Split(s, "\n")
+	for i, li := range lines {
+		if strings.Contains(li, "-") {
+			lines[i] = redRe.ReplaceAllStringFunc(li, func(m string) string {
+				return "\x1b[2;31m" + m + "\x1b[0m"
+			})
+		} else if strings.Contains(li, "+") {
+			lines[i] = greenRe.ReplaceAllStringFunc(li, func(m string) string {
+				return "\x1b[2;32m" + m + "\x1b[0m"
+			})
+		}
+	}
+	return fmt.Sprintf(c, strings.Join(lines, "\n"))
 }

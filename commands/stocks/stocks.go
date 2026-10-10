@@ -5,17 +5,18 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/seventy-two/evelyn/commands/bing"
 )
 
 type Service struct {
 	QuoteURL    string
+	MoverURL    string
 	ExchangeURL string
 	LookupURL   string
 	EarningsURL string
 	APIKey      string
 	Storage     *WatchlistStorage
-	Bing        *bing.Client
+	LogoURL     string
+	LogoAPIKey  string
 }
 
 var serviceConfig *Service
@@ -64,7 +65,7 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, str)
 			return
 		}
-		outputStock(q, s, m.ChannelID, serviceConfig.Bing)
+		outputStock(q, s, m.ChannelID)
 	case "!quote":
 		var str string
 		q, err := lookupAndGetStock(strings.Join(matches[1:], "+"))
@@ -73,7 +74,7 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, str)
 			return
 		}
-		outputBigStock(q, s, m.ChannelID, serviceConfig.Bing)
+		outputBigStock(q, s, m.ChannelID)
 	case "!watchlist", "!wl":
 		serviceConfig.Storage.handleWatchlistRequest(s, m)
 	case "!earnings":
@@ -96,5 +97,23 @@ func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		outputExchange(q, s, m.ChannelID)
 
+	case "!nasdaq", "!s&p", "!snp", "!sp", "!dow":
+		var q string
+		switch matches[0] {
+		case "!nasdaq":
+			q = "NASDAQ100"
+		case "!s&p", "!snp", "!sp":
+			q = "SP500"
+		case "!dow":
+			q = "DOW30"
+		}
+
+		top, bottom, err := GetMovers(q)
+		if err != nil {
+			str := fmt.Sprintf("an error occured (%s)", err)
+			s.ChannelMessageSend(m.ChannelID, str)
+			return
+		}
+		outputMovers(top, bottom, s, m.ChannelID)
 	}
 }

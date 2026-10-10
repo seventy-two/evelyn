@@ -7,6 +7,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/seventy-two/Cara/web"
+	"github.com/seventy-two/evelyn/commands/movie/letterboxd"
 	"github.com/seventy-two/evelyn/service"
 )
 
@@ -21,7 +22,7 @@ func omdb(matches []string, s *discordgo.Session, channelID string) error {
 	}
 	toQuery := strings.Join(matches, "+")
 	url := fmt.Sprintf(serviceConfig.TargetURL, toQuery, serviceConfig.APIKey, year)
-	fmt.Println(url)
+
 	err := web.GetJSON(url, data)
 
 	if err != nil {
@@ -70,6 +71,31 @@ func omdb(matches []string, s *discordgo.Session, channelID string) error {
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: data.Poster,
 		}
+	}
+
+	// Try to get a random Letterboxd review
+	if review := letterboxd.GetRandomReview(data.Title); review != nil {
+		reviewText := review.ReviewText
+		if len(reviewText) > 600 {
+			reviewText = reviewText[:600] + "..."
+		}
+		if reviewText == "" {
+			reviewText = "*No review text*"
+		}
+
+		// Format review field
+		reviewTitle := review.Username
+		if review.Rating != "" {
+			reviewTitle += fmt.Sprintf(" %s", review.Rating)
+		}
+
+		reviewValue := reviewText
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   reviewTitle,
+			Value:  reviewValue,
+			Inline: false,
+		})
 	}
 
 	_, err = s.ChannelMessageSendEmbed(channelID, embed)

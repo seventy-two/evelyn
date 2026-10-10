@@ -23,7 +23,7 @@ func New(config *service.Service) *Client {
 func RegisterService(dg *discordgo.Session, config *service.Service) {
 	serviceConfig = config
 	c = New(serviceConfig)
-	dg.AddHandler(invokeCommand)
+	// dg.AddHandler(invokeCommand) bing is kill ;_;
 }
 
 func invokeCommand(s *discordgo.Session, m *discordgo.MessageCreate) {

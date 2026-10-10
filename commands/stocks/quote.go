@@ -5,7 +5,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/seventy-two/Cara/web"
-	"github.com/seventy-two/evelyn/commands/bing"
 )
 
 func lookupAndGetStock(query string) (*stock, error) {
@@ -94,13 +93,13 @@ func lookupStock(query string) (string, error) {
 	return symbol, nil
 }
 
-func outputStock(q *stock, s *discordgo.Session, channelID string, b *bing.Client) {
+func outputStock(q *stock, s *discordgo.Session, channelID string) {
 	if q == nil {
 		s.ChannelMessageSend(channelID, "no results")
 		return
 	}
 
-	img := b.GetThumbnail(fmt.Sprintf("%s+logo", q.symbol))
+	img := fmt.Sprintf(serviceConfig.LogoURL, q.symbol, serviceConfig.LogoAPIKey)
 
 	e := &discordgo.MessageEmbed{
 		Title:       q.symbol + " - " + q.name,
@@ -125,13 +124,13 @@ func outputStock(q *stock, s *discordgo.Session, channelID string, b *bing.Clien
 	s.ChannelMessageSendEmbed(channelID, e)
 }
 
-func outputBigStock(q *stock, s *discordgo.Session, channelID string, b *bing.Client) {
+func outputBigStock(q *stock, s *discordgo.Session, channelID string) {
 	if q == nil {
 		s.ChannelMessageSend(channelID, "no results")
 		return
 	}
 
-	img := b.GetThumbnail(fmt.Sprintf("%s+logo", q.name))
+	img := fmt.Sprintf(serviceConfig.LogoURL, q.symbol, serviceConfig.LogoAPIKey)
 
 	e := &discordgo.MessageEmbed{
 		Title:       q.symbol + " - " + q.name,

@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/seventy-two/evelyn/commands/bing"
 	"github.com/seventy-two/evelyn/commands/dictionary"
 	"github.com/seventy-two/evelyn/commands/olympics"
 	"github.com/seventy-two/evelyn/commands/siege"
 	"github.com/seventy-two/evelyn/commands/stocks"
+	"github.com/seventy-two/evelyn/commands/wc"
 	"github.com/seventy-two/evelyn/commands/weather"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/service"
@@ -40,6 +40,7 @@ type serviceConfig struct {
 	bingAPI       *service.Service
 	olympicsAPI   *olympics.Service
 	generationAPI *generation.Service
+	wcAPI         *wc.Service
 }
 
 var appMeta = struct {
@@ -192,6 +193,11 @@ func main() {
 				Value:  "https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=%s&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json&events=1",
 				EnvVar: "STOCKS_QUOTE_URL",
 			}),
+			MoverURL: *app.String(cli.StringOpt{
+				Name:   "StocksMoverURL",
+				Value:  "https://gdsapi.cnbc.com/market-mover/groupMover/%s/CHANGE_PCT/BOTH/5.json?source=SAVED&delayed=false&partnerId=2",
+				EnvVar: "STOCKS_MOVER_URL",
+			}),
 			APIKey: *app.String(cli.StringOpt{
 				Name:   "StocksQuoteKey",
 				Value:  "",
@@ -211,6 +217,16 @@ func main() {
 				Name:   "StocksExchangeURL",
 				Value:  "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=%s&to_currency=%s&apikey=%s",
 				EnvVar: "STOCKS_EXCHANGE_URL",
+			}),
+			LogoURL: *app.String(cli.StringOpt{
+				Name:   "StocksLogoURL",
+				Value:  "https://img.logo.dev/ticker/%s?token=%s",
+				EnvVar: "STOCKS_LOGO_URL",
+			}),
+			LogoAPIKey: *app.String(cli.StringOpt{
+				Name:   "StocksLogoAPIKey",
+				Value:  "",
+				EnvVar: "STOCKS_LOGO_API_KEY",
 			}),
 		},
 		siegeAPI: &siege.Service{
@@ -317,9 +333,14 @@ func main() {
 				EnvVar: "GENERATION_YOUTUBE_API_KEY",
 			}),
 		},
+		wcAPI: &wc.Service{
+			TargetURL: *app.String(cli.StringOpt{
+				Name:   "WCURL",
+				Value:  "https://web-cdn.api.bbci.co.uk/wc-poll-data/container/sport-data-scores-fixtures?selectedEndDate=%s&selectedStartDate=%s&todayDate=%s&urn=urn%%3Abbc%%3Asportsdata%%3Afootball%%3Atournament%%3Aworld-cup",
+				EnvVar: "WC_URL",
+			}),
+		},
 	}
-
-	Services.stocksAPI.Bing = bing.New(Services.bingAPI)
 
 	dbPath := *app.String(cli.StringOpt{
 		Name:   "DBPath",
