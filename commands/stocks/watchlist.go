@@ -95,8 +95,20 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 			}
 			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("removed %s from your watchlist", strings.Join(matches[2:], "+")))
 			return
+		case "clear":
+			n, err := w.Db.ClearWatchlist(m.Author.ID)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+				return
+			}
+			if n == 0 {
+				s.ChannelMessageSend(m.ChannelID, "your watchlist is already empty")
+				return
+			}
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("cleared your watchlist (%d %s)", n, plural(n, "stock", "stocks")))
+			return
 		case "help":
-			s.ChannelMessageSend(m.ChannelID, "usage: !wl add/del <stock name> - adds or removes a stock from your watchlist\n!wl - shows the stocks in your watchlist")
+			s.ChannelMessageSend(m.ChannelID, "usage: !wl add/del <stock name> - adds or removes a stock from your watchlist\n!wl clear - removes every stock from your watchlist\n!wl - shows the stocks in your watchlist")
 			return
 		}
 	}
@@ -106,6 +118,11 @@ func (w *WatchlistStorage) handleWatchlistRequest(s *discordgo.Session, m *disco
 	queries, err := w.retrieveWatchlistForUser(m.Author.ID)
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, err.Error())
+		return
+	}
+
+	if len(queries) == 0 {
+		s.ChannelMessageSend(m.ChannelID, "your watchlist is empty: add stocks with !wl add <stock name>")
 		return
 	}
 
@@ -168,4 +185,11 @@ func addAnsiColours(s string) string {
 		}
 	}
 	return fmt.Sprintf(c, strings.Join(lines, "\n"))
+}
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return one
+	}
+	return many
 }

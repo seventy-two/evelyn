@@ -29,3 +29,26 @@ func TestValues(t *testing.T) {
 	require.Len(t, cunts, 1)
 	assert.Equal(t, "123", cunts[0].ID)
 }
+
+func TestClearWatchlist(t *testing.T) {
+	d := NewDatabase(t.TempDir())
+	defer d.db.Close()
+
+	n, err := d.ClearWatchlist("nobody")
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+
+	require.NoError(t, d.NewCunt("123", &CuntInfo{Location: "Bristol", Watchlist: []string{"NVDA", "AMD"}}))
+	n, err = d.ClearWatchlist("123")
+	require.NoError(t, err)
+	assert.Equal(t, 2, n)
+
+	c, err := d.GetCunt("123")
+	require.NoError(t, err)
+	assert.Empty(t, c.Info.Watchlist)
+	assert.Equal(t, "Bristol", c.Info.Location)
+
+	n, err = d.ClearWatchlist("123")
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+}

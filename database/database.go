@@ -112,6 +112,27 @@ func (d *Database) RemoveCuntInfo(id string, c *CuntInfo) error {
 	return nil
 }
 
+// ClearWatchlist empties a user's watchlist, keeping the rest of their info.
+// It reports how many stocks were removed; a user with nothing stored has 0.
+func (d *Database) ClearWatchlist(id string) (int, error) {
+	cunt, err := d.GetCunt(id)
+	if errors.Is(err, badger.ErrKeyNotFound) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	if cunt.Info == nil || len(cunt.Info.Watchlist) == 0 {
+		return 0, nil
+	}
+	n := len(cunt.Info.Watchlist)
+	cunt.Info.Watchlist = nil
+	if err := d.SetCunt(cunt); err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
 func (d *Database) GetCunts() ([]*Cunt, error) {
 	var cunts []*Cunt
 	if err := d.db.View(func(txn *badger.Txn) error {

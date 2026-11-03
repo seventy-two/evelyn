@@ -21,6 +21,7 @@ func SlashCommands() []*slash.Command {
 					Choices: []*discordgo.ApplicationCommandOptionChoice{
 						{Name: "add", Value: "add"},
 						{Name: "remove", Value: "del"},
+						{Name: "clear", Value: "clear"},
 						{Name: "help", Value: "help"},
 					},
 				},
