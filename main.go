@@ -11,6 +11,7 @@ import (
 	"github.com/seventy-two/evelyn/commands/weather"
 	"github.com/seventy-two/evelyn/passive/autotrader"
 	"github.com/seventy-two/evelyn/passive/generation"
+	"github.com/seventy-two/evelyn/passive/kino"
 	"github.com/seventy-two/evelyn/service"
 
 	cli "github.com/jawher/mow.cli"
@@ -37,6 +38,7 @@ type serviceConfig struct {
 	bingAPI       *service.Service
 	generationAPI *generation.Service
 	autotraderAPI *autotrader.Service
+	kinoAPI       *kino.Service
 }
 
 var appMeta = struct {
@@ -272,6 +274,20 @@ func main() {
 			EnvVar: "AUTOTRADER_USER_ID",
 		}),
 	}
+	Services.kinoAPI = &kino.Service{
+		URL: *app.String(cli.StringOpt{
+			Name:   "KinoURL",
+			Value:  "",
+			EnvVar: "KINO_URL",
+		}),
+		ChannelID: *app.String(cli.StringOpt{
+			Name:   "KinoChannelID",
+			Value:  "237647756049514498",
+			EnvVar: "KINO_CHANNEL_ID",
+		}),
+		Interval: time.Minute,
+	}
+
 	autotraderInterval := *app.String(cli.StringOpt{
 		Name:   "AutotraderInterval",
 		Value:  "2h",

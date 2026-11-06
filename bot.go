@@ -15,6 +15,7 @@ import (
 	"github.com/seventy-two/evelyn/passive/autotrader"
 	"github.com/seventy-two/evelyn/passive/generation"
 	"github.com/seventy-two/evelyn/passive/images"
+	"github.com/seventy-two/evelyn/passive/kino"
 	"github.com/seventy-two/evelyn/passive/shitpost"
 	"github.com/seventy-two/evelyn/slash"
 
@@ -122,6 +123,11 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	if services.autotraderAPI != nil {
 		services.autotraderAPI.Store = db
 		autotrader.RegisterService(dg, services.autotraderAPI)
+	}
+
+	if services.kinoAPI != nil {
+		services.kinoAPI.Store = db
+		kino.RegisterService(dg, services.kinoAPI)
 	}
 
 	shitpost.RegisterService(dg, &shitpost.Service{Db: db})

@@ -72,6 +72,12 @@ These run without a command:
   videos up to 20 minutes long, or any length if you mention the bot.
 - **Voice note transcription** (main server only): transcribes `.ogg` voice
   notes with Gemini's speech-to-text model.
+- **kino**: if `KINO_URL` is set to a [kino](https://github.com/seventy-two)
+  film diary's address, posts each newly logged film (with stars, likes and
+  the review, spoilers hidden) and each new member to `KINO_CHANNEL_ID`.
+  It checks every minute; history imported from Letterboxd isn't announced,
+  and a batch of more than three logs from one member is summed up in one
+  message.
 - **Vertical media "fix"**: reposts tall images stretched to landscape
   (occasionally deep-fried) and tall videos rotated 90°.
 
