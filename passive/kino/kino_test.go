@@ -41,15 +41,16 @@ func (k *fakeKino) handler(t *testing.T) http.Handler {
 			json.NewEncoder(w).Encode(map[string]any{"members": k.members})
 		case "/api/feed":
 			var since int64
-			if s := r.URL.Query().Get("since"); s != "" {
-				json.Unmarshal([]byte(s), &since)
+			poll := r.URL.Query().Has("since")
+			if poll {
+				json.Unmarshal([]byte(r.URL.Query().Get("since")), &since)
 			}
 			latest := int64(0)
 			if len(k.logs) > 0 {
 				latest = k.logs[len(k.logs)-1].ID
 			}
 			items := []logEntry{}
-			if since > 0 {
+			if poll {
 				for _, l := range k.logs {
 					if l.ID > since {
 						items = append(items, l)
@@ -101,6 +102,18 @@ func TestFeedPostsOnlyNewLogs(t *testing.T) {
 
 	require.NoError(t, w.checkFeed())
 	assert.Len(t, *sent, 1, "nothing new, nothing posted")
+}
+
+func TestFeedStartsFromAnEmptyFeed(t *testing.T) {
+	k := &fakeKino{}
+	w, sent, store := newWatcher(t, k)
+	require.NoError(t, w.checkFeed())
+	assert.Equal(t, "0", string(store[cursorKey]))
+	require.NoError(t, w.checkFeed())
+	assert.Empty(t, *sent)
+	k.logs = append(k.logs, heat(1, "Mo"))
+	require.NoError(t, w.checkFeed())
+	require.Len(t, *sent, 1, "the first log ever is posted")
 }
 
 func TestFeedCollapsesABatch(t *testing.T) {
