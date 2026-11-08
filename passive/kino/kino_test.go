@@ -32,11 +32,28 @@ func (f fakeStore) SetValue(key string, v interface{}) error {
 type fakeKino struct {
 	logs    []logEntry
 	members []user
+	news    []news
+	keys    []string // X-Kino-Key on each request
 }
 
 func (k *fakeKino) handler(t *testing.T) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		k.keys = append(k.keys, r.Header.Get("X-Kino-Key"))
 		switch r.URL.Path {
+		case "/api/cinema/announcements":
+			var since int64 = -1
+			if r.URL.Query().Has("since") {
+				json.Unmarshal([]byte(r.URL.Query().Get("since")), &since)
+			}
+			latest := int64(0)
+			items := []news{}
+			for _, n := range k.news {
+				latest = n.ID
+				if since >= 0 && n.ID > since {
+					items = append(items, n)
+				}
+			}
+			json.NewEncoder(w).Encode(map[string]any{"items": items, "latest": latest})
 		case "/api/users":
 			json.NewEncoder(w).Encode(map[string]any{"members": k.members})
 		case "/api/feed":
@@ -148,4 +165,39 @@ func TestMembers(t *testing.T) {
 func TestValidURL(t *testing.T) {
 	assert.True(t, validURL("http://127.0.0.1:6100"))
 	assert.False(t, validURL("127.0.0.1:6100"))
+}
+
+func TestCinemaPostsAndWithdraws(t *testing.T) {
+	k := &fakeKino{}
+	w, _, store := newWatcher(t, k)
+	w.config.Key = "bk"
+	var posted []string
+	deleted := map[string]bool{}
+	w.post = func(c string) (string, error) {
+		posted = append(posted, c)
+		return "m" + string(rune('0'+len(posted))), nil
+	}
+	w.remove = func(id string) error { deleted[id] = true; return nil }
+	mk := func(id int64, kind string, showing int64, md string) news {
+		n := news{ID: id, Kind: kind, Markdown: md}
+		n.Showing.ID = showing
+		return n
+	}
+	k.news = []news{mk(1, "booked", 1, "old")}
+	require.NoError(t, w.checkCinema()) // first look: nothing posted
+	assert.Empty(t, posted)
+	k.news = append(k.news, mk(2, "booked", 2, "booked Heat"), mk(3, "booked", 3, "booked Alien"), mk(4, "starting", 2, "Heat starting"))
+	require.NoError(t, w.checkCinema())
+	assert.Equal(t, []string{"booked Heat", "booked Alien", "Heat starting"}, posted)
+	k.news = append(k.news, mk(5, "removed", 2, ""))
+	require.NoError(t, w.checkCinema())
+	assert.Equal(t, map[string]bool{"m1": true, "m3": true}, deleted)
+	require.NoError(t, w.checkCinema()) // nothing new
+	assert.Len(t, posted, 3)
+	var msgs map[int64][]string
+	store.GetValue(cinemaMsgsKey, &msgs)
+	assert.Equal(t, map[int64][]string{3: {"m2"}}, msgs)
+	for _, key := range k.keys {
+		assert.Equal(t, "bk", key)
+	}
 }

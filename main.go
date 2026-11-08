@@ -280,6 +280,11 @@ func main() {
 			Value:  "",
 			EnvVar: "KINO_URL",
 		}),
+		Key: *app.String(cli.StringOpt{
+			Name:   "KinoKey",
+			Value:  "",
+			EnvVar: "KINO_BOT_KEY",
+		}),
 		ChannelID: *app.String(cli.StringOpt{
 			Name:   "KinoChannelID",
 			Value:  "237647756049514498",

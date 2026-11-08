@@ -1,5 +1,5 @@
 // Package kino watches a kino film diary (a small Letterboxd-like site)
-// and posts newly logged films and new members to Discord.
+// and posts newly logged films, new members and cinema showings to Discord.
 package kino
 
 import (
@@ -28,7 +28,10 @@ const (
 // Service is the configuration for the kino watcher. It does nothing unless
 // URL is set (kino's address, e.g. http://127.0.0.1:6100).
 type Service struct {
-	URL       string
+	URL string
+	// Key is kino's bot key (KINO_BOT_KEY there), sent as X-Kino-Key:
+	// kino's activity and cinema news are for members only.
+	Key       string
 	ChannelID string
 	Interval  time.Duration
 	Store     Store
@@ -57,6 +60,15 @@ func RegisterService(dg *discordgo.Session, config *Service) {
 			_, err := dg.ChannelMessageSendComplex(config.ChannelID, m)
 			return err
 		},
+		post: func(content string) (string, error) {
+			m, err := dg.ChannelMessageSendComplex(config.ChannelID, &discordgo.MessageSend{
+				Content: content, AllowedMentions: &discordgo.MessageAllowedMentions{}})
+			if err != nil {
+				return "", err
+			}
+			return m.ID, nil
+		},
+		remove: func(id string) error { return dg.ChannelMessageDelete(config.ChannelID, id) },
 	}
 	go w.run()
 }
@@ -65,6 +77,8 @@ type watcher struct {
 	config *Service
 	client *http.Client
 	send   func(*discordgo.MessageSend) error
+	post   func(content string) (id string, err error) // for cinema news, kept to delete later
+	remove func(id string) error
 }
 
 func (w *watcher) run() {
@@ -75,12 +89,22 @@ func (w *watcher) run() {
 		if err := w.checkFeed(); err != nil {
 			log.Errorf("kino feed: %s", err)
 		}
+		if err := w.checkCinema(); err != nil {
+			log.Errorf("kino cinema: %s", err)
+		}
 		time.Sleep(w.config.Interval)
 	}
 }
 
 func (w *watcher) get(path string, v interface{}) error {
-	resp, err := w.client.Get(strings.TrimSuffix(w.config.URL, "/") + "/api/" + path)
+	req, err := http.NewRequest(http.MethodGet, strings.TrimSuffix(w.config.URL, "/")+"/api/"+path, nil)
+	if err != nil {
+		return err
+	}
+	if w.config.Key != "" {
+		req.Header.Set("X-Kino-Key", w.config.Key)
+	}
+	resp, err := w.client.Do(req)
 	if err != nil {
 		return err
 	}
