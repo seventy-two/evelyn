@@ -12,12 +12,12 @@ func TestValues(t *testing.T) {
 	defer d.db.Close()
 
 	var seen []string
-	found, err := d.GetValue("autotrader:seen", &seen)
+	found, err := d.GetValue("example:seen", &seen)
 	require.NoError(t, err)
 	assert.False(t, found)
 
-	require.NoError(t, d.SetValue("autotrader:seen", []string{"1", "2"}))
-	found, err = d.GetValue("autotrader:seen", &seen)
+	require.NoError(t, d.SetValue("example:seen", []string{"1", "2"}))
+	found, err = d.GetValue("example:seen", &seen)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, []string{"1", "2"}, seen)
