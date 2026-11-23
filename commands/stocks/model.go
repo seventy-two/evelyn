@@ -17,18 +17,22 @@ type Quote struct {
 	} `json:"Global Quote"`
 }
 
+// Lookup is Alpha Vantage's SYMBOL_SEARCH response.
 type Lookup struct {
-	BestMatches []struct {
-		Symbol      string `json:"1. symbol"`
-		Name        string `json:"2. name"`
-		Type        string `json:"3. type"`
-		Region      string `json:"4. region"`
-		MarketOpen  string `json:"5. marketOpen"`
-		MarketClose string `json:"6. marketClose"`
-		Timezone    string `json:"7. timezone"`
-		Currency    string `json:"8. currency"`
-		MatchScore  string `json:"9. matchScore"`
-	} `json:"bestMatches"`
+	BestMatches []LookupMatch `json:"bestMatches"`
+}
+
+// LookupMatch is one SYMBOL_SEARCH result.
+type LookupMatch struct {
+	Symbol      string `json:"1. symbol"`
+	Name        string `json:"2. name"`
+	Type        string `json:"3. type"`
+	Region      string `json:"4. region"`
+	MarketOpen  string `json:"5. marketOpen"`
+	MarketClose string `json:"6. marketClose"`
+	Timezone    string `json:"7. timezone"`
+	Currency    string `json:"8. currency"`
+	MatchScore  string `json:"9. matchScore"`
 }
 
 type Earnings struct {

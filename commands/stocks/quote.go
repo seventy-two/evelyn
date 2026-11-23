@@ -2,6 +2,7 @@ package stocks
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/seventy-two/Cara/web"
@@ -82,15 +83,29 @@ func lookupStock(query string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(lookup.BestMatches) == 0 {
-		return "", nil
-	}
-	var symbol string
+	return pickSymbol(query, lookup.BestMatches), nil
+}
 
-	if symbol == "" {
-		symbol = lookup.BestMatches[0].Symbol
+// pickSymbol chooses the symbol to quote from search results. An exact ticker
+// match wins (so "ANT" stays ANT), then the best US listing, then the best
+// match of all. Without this, "anthropic" picked the Toronto CDR ANTH.TRT,
+// which CNBC doesn't know, and the quote came back empty.
+func pickSymbol(query string, matches []LookupMatch) string {
+	if len(matches) == 0 {
+		return ""
 	}
-	return symbol, nil
+	q := strings.ReplaceAll(query, "+", " ")
+	for _, m := range matches {
+		if strings.EqualFold(m.Symbol, q) {
+			return m.Symbol
+		}
+	}
+	for _, m := range matches {
+		if m.Region == "United States" {
+			return m.Symbol
+		}
+	}
+	return matches[0].Symbol
 }
 
 func outputStock(q *stock, s *discordgo.Session, channelID string) {
