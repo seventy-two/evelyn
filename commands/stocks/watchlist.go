@@ -174,15 +174,14 @@ func addAnsiColours(s string) string {
 	c := "```ansi\n%s```"
 	lines := strings.Split(s, "\n")
 	for i, li := range lines {
-		if strings.Contains(li, "-") {
-			lines[i] = redRe.ReplaceAllStringFunc(li, func(m string) string {
-				return "\x1b[2;31m" + m + "\x1b[0m"
-			})
-		} else if strings.Contains(li, "+") {
-			lines[i] = greenRe.ReplaceAllStringFunc(li, func(m string) string {
-				return "\x1b[2;32m" + m + "\x1b[0m"
-			})
-		}
+		// Colour each pass separately: London symbols contain "-" ("BA.-GB"),
+		// so a line's sign can't be told from strings.Contains.
+		li = redRe.ReplaceAllStringFunc(li, func(m string) string {
+			return "\x1b[2;31m" + m + "\x1b[0m"
+		})
+		lines[i] = greenRe.ReplaceAllStringFunc(li, func(m string) string {
+			return "\x1b[2;32m" + m + "\x1b[0m"
+		})
 	}
 	return fmt.Sprintf(c, strings.Join(lines, "\n"))
 }
