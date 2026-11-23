@@ -77,35 +77,67 @@ func getStockData(symbol string) ([]*stock, error) {
 	return stockz, nil
 }
 
+// lookupStock turns a ticker or company name into the symbol to quote, using
+// CNBC's symbol search so the result is always one the CNBC quote API knows.
+// The search matches the start of names literally, so a multi-word query that
+// finds nothing is retried hyphenated ("rolls royce" → Rolls-Royce), then as
+// its first word.
 func lookupStock(query string) (string, error) {
-	lookup := &Lookup{}
-	err := web.GetJSON(fmt.Sprintf(serviceConfig.LookupURL, query, serviceConfig.APIKey), lookup)
-	if err != nil {
-		return "", err
+	var lastErr error
+	for _, q := range searchVariants(query) {
+		var matches []LookupMatch
+		if err := web.GetJSON(fmt.Sprintf(serviceConfig.LookupURL, q), &matches); err != nil {
+			lastErr = err
+			continue
+		}
+		if sym := pickSymbol(query, matches); sym != "" {
+			return sym, nil
+		}
 	}
-	return pickSymbol(query, lookup.BestMatches), nil
+	return "", lastErr
 }
 
-// pickSymbol chooses the symbol to quote from search results. An exact ticker
-// match wins (so "ANT" stays ANT), then the best US listing, then the best
-// match of all. Without this, "anthropic" picked the Toronto CDR ANTH.TRT,
-// which CNBC doesn't know, and the quote came back empty.
+// searchVariants lists the search strings lookupStock tries, in order, for a
+// "+"-joined query.
+func searchVariants(query string) []string {
+	words := strings.FieldsFunc(query, func(r rune) bool { return r == '+' || r == ' ' })
+	if len(words) < 2 {
+		return []string{query}
+	}
+	return []string{strings.Join(words, "+"), strings.Join(words, "-"), words[0]}
+}
+
+// pickSymbol chooses the symbol to quote from search results: an exact ticker
+// match (so "ANT" stays ANT), then the best US stock, then the best US listing
+// of any kind, then the best match of all. CNBC ranks the Anthropic ETF (ANTW)
+// above ANT for "anthropic", hence preferring stocks over ETFs.
 func pickSymbol(query string, matches []LookupMatch) string {
-	if len(matches) == 0 {
+	var found []LookupMatch
+	for _, m := range matches {
+		if m.Symbol != "" {
+			found = append(found, m)
+		}
+	}
+	if len(found) == 0 {
 		return ""
 	}
 	q := strings.ReplaceAll(query, "+", " ")
-	for _, m := range matches {
+	for _, m := range found {
 		if strings.EqualFold(m.Symbol, q) {
 			return m.Symbol
 		}
 	}
-	for _, m := range matches {
-		if m.Region == "United States" {
+	for _, m := range found {
+		if m.CountryCode == "US" && m.IssueType == "STOCK" {
 			return m.Symbol
 		}
 	}
-	return matches[0].Symbol
+	for _, m := range found {
+		if m.CountryCode == "US" {
+			return m.Symbol
+		}
+	}
+	return found[0].Symbol
 }
 
 func outputStock(q *stock, s *discordgo.Session, channelID string) {

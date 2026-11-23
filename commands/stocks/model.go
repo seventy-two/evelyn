@@ -17,22 +17,15 @@ type Quote struct {
 	} `json:"Global Quote"`
 }
 
-// Lookup is Alpha Vantage's SYMBOL_SEARCH response.
-type Lookup struct {
-	BestMatches []LookupMatch `json:"bestMatches"`
-}
-
-// LookupMatch is one SYMBOL_SEARCH result.
+// LookupMatch is one result from CNBC's symbol search (symlookup.cnbc.com).
+// The response is a JSON array whose first element is metadata with no
+// symbolName; the rest are matches, best first.
 type LookupMatch struct {
-	Symbol      string `json:"1. symbol"`
-	Name        string `json:"2. name"`
-	Type        string `json:"3. type"`
-	Region      string `json:"4. region"`
-	MarketOpen  string `json:"5. marketOpen"`
-	MarketClose string `json:"6. marketClose"`
-	Timezone    string `json:"7. timezone"`
-	Currency    string `json:"8. currency"`
-	MatchScore  string `json:"9. matchScore"`
+	Symbol      string `json:"symbolName"`
+	Name        string `json:"companyName"`
+	IssueType   string `json:"issueType"`
+	CountryCode string `json:"countryCode"`
+	Exchange    string `json:"exchangeName"`
 }
 
 type Earnings struct {

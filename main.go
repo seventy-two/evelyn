@@ -172,7 +172,7 @@ func main() {
 			}),
 			LookupURL: *app.String(cli.StringOpt{
 				Name:   "StocksLookupURL",
-				Value:  "https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=%s&apikey=%s",
+				Value:  "https://symlookup.cnbc.com/symservice/symlookup.do?prefix=%s&partnerid=20064&pgok=1&pgsize=10",
 				EnvVar: "STOCKS_LOOKUP_URL",
 			}),
 			EarningsURL: *app.String(cli.StringOpt{
