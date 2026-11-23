@@ -39,6 +39,7 @@ type stock struct {
 	time             string
 	yearHigh         string
 	yearLow          string
+	currency         string
 }
 
 func RegisterService(dg *discordgo.Session, config *Service) {

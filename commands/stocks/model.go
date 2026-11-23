@@ -21,6 +21,7 @@ type Quote struct {
 // The response is a JSON array whose first element is metadata with no
 // symbolName; the rest are matches, best first.
 type LookupMatch struct {
+	IssuerID    string `json:"issuerId"`
 	Symbol      string `json:"symbolName"`
 	Name        string `json:"companyName"`
 	IssueType   string `json:"issueType"`

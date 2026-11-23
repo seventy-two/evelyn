@@ -3,6 +3,7 @@ package stocks
 import (
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/seventy-two/Cara/web"
@@ -35,7 +36,8 @@ func getStockData(symbol string) ([]*stock, error) {
 	}
 	var stockz []*stock
 	for _, s := range stocks.FormattedQuoteResult.FormattedQuote {
-		price := s.Last
+		unit := priceUnit(s.CurrencyCode)
+		price := withUnit(s.Last, unit)
 		change := s.Change
 		percentChange := s.ChangePct
 		source := s.Source
@@ -45,7 +47,7 @@ func getStockData(symbol string) ([]*stock, error) {
 		extPct := ""
 
 		if s.ExtendedMktQuote.LastTime > s.LastTime {
-			extPrice = "\n🌙 " + s.ExtendedMktQuote.Last
+			extPrice = "\n🌙 " + withUnit(s.ExtendedMktQuote.Last, unit)
 			extChange = "\n🌙 " + s.ExtendedMktQuote.Change
 			extPct = "(" + s.ExtendedMktQuote.ChangePct + ")"
 			source = s.ExtendedMktQuote.Source
@@ -72,9 +74,28 @@ func getStockData(symbol string) ([]*stock, error) {
 			time:             time,
 			yearHigh:         s.Yrhiprice,
 			yearLow:          s.Yrloprice,
+			currency:         s.CurrencyCode,
 		})
 	}
 	return stockz, nil
+}
+
+// priceUnit is the suffix shown after prices: "p" for London's pence quotes,
+// nothing otherwise.
+func priceUnit(currency string) string {
+	switch currency {
+	case "GBp", "GBX", "GBx":
+		return "p"
+	}
+	return ""
+}
+
+// withUnit appends unit to a non-empty price.
+func withUnit(price, unit string) string {
+	if price == "" {
+		return price
+	}
+	return price + unit
 }
 
 // lookupStock turns a ticker or company name into the symbol to quote, using
@@ -90,11 +111,37 @@ func lookupStock(query string) (string, error) {
 			lastErr = err
 			continue
 		}
-		if sym := pickSymbol(query, matches); sym != "" {
-			return sym, nil
+		sym, london := pickSymbol(query, matches)
+		if sym == "" {
+			continue
 		}
+		if len(london) > 0 {
+			quotes, err := getStockData(strings.Join(london, "|"))
+			if err != nil {
+				return sym, nil
+			}
+			if uk := ukListing(quotes); uk != "" {
+				return uk, nil
+			}
+		}
+		return sym, nil
 	}
 	return "", lastErr
+}
+
+// ukListing returns the first quote priced in pence or pounds with a price,
+// which marks a UK company's home listing. Foreign companies' London lines
+// (Apple's 0R2V-GB) trade in their own currency, often with no price.
+func ukListing(quotes []*stock) string {
+	for _, q := range quotes {
+		switch strings.ToUpper(q.currency) {
+		case "GBP", "GBX":
+			if q.price != "" {
+				return q.symbol
+			}
+		}
+	}
+	return ""
 }
 
 // searchVariants lists the search strings lookupStock tries, in order, for a
@@ -107,11 +154,22 @@ func searchVariants(query string) []string {
 	return []string{strings.Join(words, "+"), strings.Join(words, "-"), words[0]}
 }
 
-// pickSymbol chooses the symbol to quote from search results: an exact ticker
-// match (so "ANT" stays ANT), then the best US stock, then the best US listing
-// of any kind, then the best match of all. CNBC ranks the Anthropic ETF (ANTW)
-// above ANT for "anthropic", hence preferring stocks over ETFs.
-func pickSymbol(query string, matches []LookupMatch) string {
+// pickSymbol chooses what to quote from search results. It returns the
+// symbol to use and, when the chosen company also trades in London, those
+// London symbols, which lookupStock quotes to see if it's a UK company
+// (priced in pence) whose home listing should win.
+//
+// CNBC's ranking can put another company first (Gilead for "astrazeneca",
+// NOVONIX for "novo"), so a company whose name starts with the query's words
+// is preferred.
+//
+// An exact ticker wins (so "ANT" stays ANT), though a UK company's US ticker
+// ("bp") still gets its London listings checked. Otherwise the company is
+// the first stock whose issuer has a US or London listing (so Apple Inc. beats
+// a Shanghai "Apple Flavor"), and its symbol is its US stock, else any US
+// listing, else its best-ranked one. With no stocks at all, the best US
+// listing (an ETF, say), else the best match.
+func pickSymbol(query string, matches []LookupMatch) (string, []string) {
 	var found []LookupMatch
 	for _, m := range matches {
 		if m.Symbol != "" {
@@ -119,25 +177,106 @@ func pickSymbol(query string, matches []LookupMatch) string {
 		}
 	}
 	if len(found) == 0 {
-		return ""
+		return "", nil
 	}
+	// Group listings by company; a match without an issuer is its own company.
+	company := func(m LookupMatch) string {
+		if m.IssuerID != "" {
+			return m.IssuerID
+		}
+		return "symbol:" + m.Symbol
+	}
+	listings := map[string][]LookupMatch{}
+	for _, m := range found {
+		listings[company(m)] = append(listings[company(m)], m)
+	}
+	usOrUK := func(ls []LookupMatch) bool {
+		for _, l := range ls {
+			if l.CountryCode == "US" || l.CountryCode == "GB" {
+				return true
+			}
+		}
+		return false
+	}
+
+	londonOf := func(id string) []string {
+		var london []string
+		for _, l := range listings[id] {
+			if l.CountryCode == "GB" && l.IssueType == "STOCK" {
+				london = append(london, l.Symbol)
+			}
+		}
+		return london
+	}
+
 	q := strings.ReplaceAll(query, "+", " ")
 	for _, m := range found {
 		if strings.EqualFold(m.Symbol, q) {
-			return m.Symbol
+			if m.CountryCode == "GB" || m.IssueType != "STOCK" {
+				return m.Symbol, nil
+			}
+			return m.Symbol, londonOf(company(m))
 		}
 	}
+
+	target := ""
 	for _, m := range found {
-		if m.CountryCode == "US" && m.IssueType == "STOCK" {
-			return m.Symbol
+		if m.IssueType == "STOCK" && usOrUK(listings[company(m)]) && nameStartsWith(m.Name, q) {
+			target = company(m)
+			break
 		}
 	}
-	for _, m := range found {
-		if m.CountryCode == "US" {
-			return m.Symbol
+	if target == "" {
+		for _, m := range found {
+			if m.IssueType == "STOCK" && usOrUK(listings[company(m)]) {
+				target = company(m)
+				break
+			}
 		}
 	}
-	return found[0].Symbol
+	if target == "" {
+		for _, m := range found {
+			if m.IssueType == "STOCK" {
+				target = company(m)
+				break
+			}
+		}
+	}
+	if target == "" {
+		for _, m := range found {
+			if m.CountryCode == "US" {
+				return m.Symbol, nil
+			}
+		}
+		return found[0].Symbol, nil
+	}
+
+	ls := listings[target]
+	london := londonOf(target)
+	for _, l := range ls {
+		if l.CountryCode == "US" && l.IssueType == "STOCK" {
+			return l.Symbol, london
+		}
+	}
+	for _, l := range ls {
+		if l.CountryCode == "US" {
+			return l.Symbol, london
+		}
+	}
+	return ls[0].Symbol, london
+}
+
+// nameStartsWith reports whether name begins with query as whole words,
+// ignoring case and punctuation: "Rolls-Royce Holdings" starts with
+// "rolls royce", "Novo Nordisk" with "novo", but "NOVONIX" doesn't.
+func nameStartsWith(name, query string) bool {
+	words := func(s string) string {
+		return strings.Join(strings.FieldsFunc(strings.ToLower(s), func(r rune) bool {
+			return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+		}), " ")
+	}
+	n, q := words(name), words(query)
+	return q != "" && (n == q || strings.HasPrefix(n, q+" "))
 }
 
 func outputStock(q *stock, s *discordgo.Session, channelID string) {
