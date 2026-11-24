@@ -68,7 +68,7 @@ func TestPostsOncePerDayAfterTen(t *testing.T) {
 	require.Len(t, *sent, 1)
 	assert.Contains(t, (*sent)[0].Content, "day 7")
 	assert.Contains(t, (*sent)[0].Content, "1,234 messages")
-	assert.Contains(t, (*sent)[0].Content, "61%")
+	assert.Contains(t, (*sent)[0].Content, "61% lit")
 	assert.Equal(t, "hearth.png", (*sent)[0].Files[0].Name)
 	require.NoError(t, p.tick(at("2026-12-01 10:05")))
 	assert.Len(t, *sent, 1, "only once a day")

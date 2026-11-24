@@ -167,11 +167,11 @@ func (p *poster) post(now time.Time) error {
 func Caption(st Status, now time.Time) string {
 	if st.Count == 0 {
 		return "🕯️ **hearth**: the living room is dark. Every message in here lets in a little light, " +
-			"until it's fully lit on Christmas Day. Until then you're a tiny toy with a sniper rifle, hiding in the shadows: <" + PublicURL + ">"
+			"until it's fully lit. Until then you're a tiny toy with a sniper rifle, hiding in the shadows: <" + PublicURL + ">"
 	}
 	pct := min(100, st.Count*100/max(1, st.Target))
 	day := int(now.Sub(st.Start).Hours()/24) + 1
-	return fmt.Sprintf("🕯️ **hearth, day %d**: %s messages have let in some light, about %d%% of the way to Christmas. "+
+	return fmt.Sprintf("🕯️ **hearth, day %d**: %s messages have let in some light, and the room is about %d%% lit. "+
 		"Every message makes it a little brighter. Come and hide in it: <%s>", day, thousands(st.Count), pct, PublicURL)
 }
 
