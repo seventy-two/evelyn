@@ -13,6 +13,7 @@ import (
 	"github.com/seventy-two/evelyn/commands/help"
 	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/passive/generation"
+	"github.com/seventy-two/evelyn/passive/hearth"
 	"github.com/seventy-two/evelyn/passive/images"
 	"github.com/seventy-two/evelyn/passive/kino"
 	"github.com/seventy-two/evelyn/passive/shitpost"
@@ -122,6 +123,10 @@ func registerServices(dg *discordgo.Session, services *serviceConfig, dbPath str
 	if services.kinoAPI != nil {
 		services.kinoAPI.Store = db
 		kino.RegisterService(dg, services.kinoAPI)
+	}
+	if services.hearthAPI != nil {
+		services.hearthAPI.Store = db
+		hearth.RegisterService(dg, services.hearthAPI)
 	}
 
 	shitpost.RegisterService(dg, &shitpost.Service{Db: db})

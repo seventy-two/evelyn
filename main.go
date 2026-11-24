@@ -8,6 +8,7 @@ import (
 	"github.com/seventy-two/evelyn/commands/stocks"
 	"github.com/seventy-two/evelyn/commands/weather"
 	"github.com/seventy-two/evelyn/passive/generation"
+	"github.com/seventy-two/evelyn/passive/hearth"
 	"github.com/seventy-two/evelyn/passive/kino"
 	"github.com/seventy-two/evelyn/service"
 
@@ -35,6 +36,7 @@ type serviceConfig struct {
 	bingAPI       *service.Service
 	generationAPI *generation.Service
 	kinoAPI       *kino.Service
+	hearthAPI     *hearth.Service
 }
 
 var appMeta = struct {
@@ -270,6 +272,20 @@ func main() {
 			EnvVar: "KINO_CHANNEL_ID",
 		}),
 		Interval: time.Minute,
+	}
+
+	Services.hearthAPI = &hearth.Service{
+		URL: *app.String(cli.StringOpt{
+			Name:   "HearthURL",
+			Value:  "",
+			EnvVar: "HEARTH_URL",
+		}),
+		ChannelID: *app.String(cli.StringOpt{
+			Name:   "HearthChannelID",
+			Value:  "237647756049514498",
+			EnvVar: "HEARTH_CHANNEL_ID",
+		}),
+		Hour: 10,
 	}
 
 	dbPath := *app.String(cli.StringOpt{
