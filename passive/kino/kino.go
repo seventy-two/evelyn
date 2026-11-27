@@ -33,8 +33,11 @@ type Service struct {
 	// kino's activity and cinema news are for members only.
 	Key       string
 	ChannelID string
-	Interval  time.Duration
-	Store     Store
+	Interval  time.Duration // how often to check members and the feed
+	// CinemaInterval is how often to check cinema news, so a showing's
+	// "starting" post (sent a minute ahead) lands before the start.
+	CinemaInterval time.Duration
+	Store          Store
 }
 
 // Store keeps the feed cursor and the members already seen.
@@ -82,17 +85,25 @@ type watcher struct {
 }
 
 func (w *watcher) run() {
+	every := w.config.CinemaInterval
+	if every <= 0 || every > w.config.Interval {
+		every = w.config.Interval
+	}
+	var last time.Time
 	for {
-		if err := w.checkMembers(); err != nil {
-			log.Errorf("kino members: %s", err)
-		}
-		if err := w.checkFeed(); err != nil {
-			log.Errorf("kino feed: %s", err)
+		if time.Since(last) >= w.config.Interval-every/2 {
+			last = time.Now()
+			if err := w.checkMembers(); err != nil {
+				log.Errorf("kino members: %s", err)
+			}
+			if err := w.checkFeed(); err != nil {
+				log.Errorf("kino feed: %s", err)
+			}
 		}
 		if err := w.checkCinema(); err != nil {
 			log.Errorf("kino cinema: %s", err)
 		}
-		time.Sleep(w.config.Interval)
+		time.Sleep(every)
 	}
 }
 

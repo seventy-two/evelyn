@@ -271,7 +271,8 @@ func main() {
 			Value:  "237647756049514498",
 			EnvVar: "KINO_CHANNEL_ID",
 		}),
-		Interval: time.Minute,
+		Interval:       time.Minute,
+		CinemaInterval: 15 * time.Second,
 	}
 
 	Services.hearthAPI = &hearth.Service{
